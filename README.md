@@ -13,7 +13,7 @@ Written for practice with Haskell and HaskellStack.
 
 x create Stack project
 x types for cards
-  create standard deck
+x create standard deck
   shuffle deck
   Game type
   Move type for card moves, collecting dragons
