@@ -1,6 +1,7 @@
 module Main where
 
 import Data.List (concatMap, intercalate, transpose)
+import Data.List.Split (chunksOf)
 
 data Suit = Bamboo | Character | Dot
   deriving (Eq)
@@ -52,19 +53,19 @@ type MoveCount = Integer
 data Game = Game Layout MoveCount
   deriving (Show)
 
-el :: Layout
-el = Layout
-      [FreeCell Nothing, FreeCell Nothing, FreeCell Nothing]
-      (FreeCell Nothing)
-      [Stack [], Stack [], Stack []]
-      [ [Flower, Suited Nine Bamboo] , [Dragon Character, Dragon Dot] ]
-
 deck :: Deck
 deck = Flower : concatMap suitcards suits
   where
     suits = [Bamboo, Character, Dot]
     suitcards suit = replicate 4 (Dragon suit) ++ map (\r -> Suited r suit)
                      [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
+
+el :: Layout
+el = Layout
+      [FreeCell Nothing, FreeCell Nothing, FreeCell Nothing]
+      (FreeCell Nothing)
+      [Stack [], Stack [], Stack []]
+      (chunksOf 5 deck)
 
 main :: IO ()
 main = do
