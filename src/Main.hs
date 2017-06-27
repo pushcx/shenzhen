@@ -39,7 +39,7 @@ instance Show Stack where
 type Column = [Card]
 
 showcols :: [Column] -> String
-showcols cs = intercalate "\n" $ map (\row -> unwords $ map show row) (transpose cs)
+showcols cs = intercalate "\n" $ map (unwords . map show) (transpose cs)
 
 data Layout = Layout [FreeCell] FlowerCell [Stack] [Column]
 instance Show Layout where
