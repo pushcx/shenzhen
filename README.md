@@ -8,3 +8,14 @@ from [Zachtronics](http://www.zachtronics.com/).
 ![screenshot.jpg]
 
 Written for practice with Haskell and HaskellStack.
+
+## TODO
+
+x create Stack project
+x types for cards
+  create standard deck
+  shuffle deck
+  Game type
+  Move type for card moves, collecting dragons
+  move :: Game -> Move -> Game
+  Automatic moves of avilable cards
