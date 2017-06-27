@@ -14,7 +14,8 @@ Written for practice with Haskell and HaskellStack.
   - [x] create Stack project
   - [x] types for cards
   - [x] create standard deck
-  * [ ] Layout type
+  * [x] Layout type
+  * [ ] custom Show instances for Card, Layout
   * [ ] enter game Layout
   - [ ] shuffle deck to create Layout
   - [ ] Game type
