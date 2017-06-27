@@ -2,12 +2,12 @@ name:                shenzhen
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/githubuser/shenzhen#readme
-license:             BSD3
+homepage:            https://github.com/pushcx/shenzhen#readme
+license:             AGPLv3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
+author:              Peter Bhat Harkins
+maintainer:          peter@push.cx
+copyright:           2017 Peter Bhat Harkins
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
