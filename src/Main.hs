@@ -50,6 +50,7 @@ instance Show Layout where
     ++ " Fl: "  ++ show f
     ++ " -> "   ++ unwords (map show ss)
     ++ "\n"     ++ showcols cs
+
 type MoveCount = Integer
 data Game = Game Layout MoveCount
   deriving (Show)
