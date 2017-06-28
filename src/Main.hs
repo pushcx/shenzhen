@@ -62,14 +62,16 @@ deck = Flower : concatMap suitcards suits
     suitcards suit = replicate 4 (Dragon suit) ++ map (\r -> Suited r suit)
                      [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
 
-start :: Deck -> Layout
-start deck = Layout
+layout :: Deck -> Layout
+layout deck = Layout
              [FreeCell Nothing, FreeCell Nothing, FreeCell Nothing]
              (FreeCell Nothing)
              [Stack [], Stack [], Stack []]
              (chunksOf 5 deck)
 
+
+
 main :: IO ()
 main = do
   shuffled <- shuffleM deck
-  print (start shuffled)
+  print (layout shuffled)
