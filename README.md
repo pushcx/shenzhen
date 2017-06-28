@@ -27,3 +27,8 @@ Written for practice with Haskell and HaskellStack.
   * [ ] Generate list of possible Moves for a position
   * [ ] Filter possible Moves against Game history to avoid loops
   * [ ] Take moves until game win/loss
+
+## Cleanups:
+  * [ ] Encode that `Game` has one and only one `Stack` per `Suit`, update `stackBySuit`
+  * [ ] Use `find` in `stackBySuit`
+  * [ ] Look at `Bound` or `Enum` for `Rank`
