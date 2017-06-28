@@ -17,7 +17,7 @@ Written for practice with Haskell and HaskellStack.
   * [x] Layout type
   * [x] custom Show instances for Card, Layout
   * [ ] enter game Layout
-  - [ ] shuffle deck to create Layout
+  - [x] shuffle deck to create Layout
   - [ ] Game type
   - [ ] Move type for card moves, collecting dragons
   - [ ] move :: Game -> Move -> Game

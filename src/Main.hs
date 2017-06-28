@@ -2,6 +2,7 @@ module Main where
 
 import Data.List (concatMap, intercalate, transpose)
 import Data.List.Split (chunksOf)
+import System.Random.Shuffle (shuffleM)
 
 data Suit = Bamboo | Character | Dot
   deriving (Eq)
@@ -69,4 +70,5 @@ start deck = Layout
 
 main :: IO ()
 main = do
-  putStrLn "hello world"
+  shuffled <- shuffleM deck
+  print (start shuffled)
