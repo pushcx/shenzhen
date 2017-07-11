@@ -103,6 +103,11 @@ mayTakeTo cs card = halper (reverse cs) card
       then Just (reverse (c:cs))
       else halper cs card
 
+validRunToCol :: Column -> Run -> Bool
+validRunToCol [] _ = True
+-- head's partial, but protected by line above
+validRunToCol cs run = validRunPair (last run) (head cs)
+
 showcols :: [Column] -> String
 showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose cs)
 
@@ -173,6 +178,15 @@ mkBuildFromCell (Game (Tableau fcs _ foundations _) _) i = do
   if card == next
      then return (BuildFromCell i)
      else Nothing
+
+mkPack :: Game -> ColumnIndex -> Card -> ColumnIndex -> Maybe Move
+mkPack (Game (Tableau _ _ _ cs) _) from card to = do
+  fromCol <- maybeIndex cs from
+  run <- mkRunTo fromCol card
+  toCol <- maybeIndex cs to
+  if validRunToCol toCol run
+  then Just (Pack from card to)
+  else Nothing
 
 
 
