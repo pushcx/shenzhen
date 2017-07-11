@@ -31,22 +31,22 @@ instance Show Rank where
   show Nine  = "9"
 
 
-data Card = Flower | Suited Rank Suit | Dragon Suit
+data Card = Flower | Suited Suit Rank | Dragon Suit
   deriving (Eq)
 
 instance Show Card where
   show Flower             = "Fl"
   show (Dragon suit)      = "D" ++ show suit
-  show (Suited rank suit) = show rank ++ show suit
+  show (Suited suit rank) = show rank ++ show suit
 type Deck = [Card]
 
 suitOf :: Card -> Suit
-suitOf (Suited _ s) = s
+suitOf (Suited s _) = s
 suitOf (Dragon s) = s
 suitOf _ = error "can't get suit of Flower"
 
 rankOf :: Card -> Rank
-rankOf (Suited r _) = r
+rankOf (Suited _ r) = r
 rankOf _ = error "can't get rank of Flower/Dragon"
 
 
@@ -63,6 +63,7 @@ data Foundation = Foundation Suit [Card]
 instance Show Foundation where
   show (Foundation suit []) = "_" ++ show suit
   show (Foundation suit cs) = show . head $ reverse cs
+
 
 -- A vertical stack of cards. Stored topmost-first.
 -- "Topmost" is the card not covered by any other card even though the
@@ -102,8 +103,8 @@ nextRank Nine  = Nothing
 
 
 nextCardForFoundation :: Foundation -> Maybe Card
-nextCardForFoundation (Foundation suit (Suited r s:_)) = fmap (flip Suited suit) (nextRank r)
-nextCardForFoundation (Foundation suit []) = Just (Suited One suit)
+nextCardForFoundation (Foundation suit (Suited s r:_)) = fmap (Suited suit) (nextRank r)
+nextCardForFoundation (Foundation suit []) = Just (Suited suit One)
 
 foundationBySuit :: Suit -> [Foundation] -> Foundation
 foundationBySuit suit foundations = head $ filter (\(Foundation s _) -> s == suit) foundations
@@ -146,7 +147,7 @@ mkBuildFromCell (Game (Tableau fcs _ foundations _) _) i = do
 deck :: Deck
 deck = Flower : concatMap suitcards suits
   where
-    suitcards suit = replicate 4 (Dragon suit) ++ map (\r -> Suited r suit)
+    suitcards suit = replicate 4 (Dragon suit) ++ map (Suited suit)
                      [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
 
 tableau :: Deck -> Tableau
