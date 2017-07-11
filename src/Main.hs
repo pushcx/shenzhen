@@ -114,8 +114,8 @@ showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose cs
 
 data Tableau = Tableau [Cell] FlowerCell [Foundation] [Column]
 instance Show Tableau where
-  show (Tableau fcs f fs cs) =
-       "F: " ++ unwords (map show fcs)
+  show (Tableau cs f fs cs) =
+       "C: " ++ unwords (map show cs)
     ++ " Fl: "  ++ show f
     ++ " -> "   ++ unwords (map show fs)
     ++ "\n"     ++ showcols cs
@@ -167,8 +167,8 @@ mkBuildFromColumn (Tableau _ _ foundations cs) i = do
       else Nothing
 
 mkBuildFromCell :: Tableau -> CellIndex -> Maybe Move
-mkBuildFromCell (Tableau fcs _ foundations _) i = do
-  Left (Cell cell) <- maybeIndex fcs i
+mkBuildFromCell (Tableau cs _ foundations _) i = do
+  Left (Cell cell) <- maybeIndex cs i
   card <- cell
   next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
   if card == next
