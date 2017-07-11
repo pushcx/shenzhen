@@ -120,10 +120,6 @@ instance Show Tableau where
     ++ " -> "   ++ unwords (map show fs)
     ++ "\n"     ++ showcols cs
 
-type MoveCount = Int
-data Game = Game Tableau MoveCount
-  deriving (Show)
-
 type ColumnIndex = Int
 type CellIndex = Int
 
@@ -161,8 +157,8 @@ data Move =
   | CollectDragons Suit
   deriving (Show)
 
-mkBuildFromColumn :: Game -> ColumnIndex -> Maybe Move
-mkBuildFromColumn (Game (Tableau _ _ foundations cs) _) i = do
+mkBuildFromColumn :: Tableau -> ColumnIndex -> Maybe Move
+mkBuildFromColumn (Tableau _ _ foundations cs) i = do
   col <- maybeIndex cs i
   card <- topmost col
   next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
@@ -170,17 +166,17 @@ mkBuildFromColumn (Game (Tableau _ _ foundations cs) _) i = do
       then return (BuildFromColumn i)
       else Nothing
 
-mkBuildFromCell :: Game -> CellIndex -> Maybe Move
-mkBuildFromCell (Game (Tableau fcs _ foundations _) _) i = do
-  (Cell cell) <- maybeIndex fcs i
+mkBuildFromCell :: Tableau -> CellIndex -> Maybe Move
+mkBuildFromCell (Tableau fcs _ foundations _) i = do
+  Left (Cell cell) <- maybeIndex fcs i
   card <- cell
   next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
   if card == next
      then return (BuildFromCell i)
      else Nothing
 
-mkPack :: Game -> ColumnIndex -> Card -> ColumnIndex -> Maybe Move
-mkPack (Game (Tableau _ _ _ cs) _) from card to = do
+mkPack :: Tableau -> ColumnIndex -> Card -> ColumnIndex -> Maybe Move
+mkPack (Tableau _ _ _ cs) from card to = do
   fromCol <- maybeIndex cs from
   run <- mkRunTo fromCol card
   toCol <- maybeIndex cs to
@@ -204,10 +200,8 @@ deck = Flower : concatMap suitcards suits
     suitcards suit = replicate 4 (Dragon suit) ++ map (Suited suit)
                     [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
 
-game d = Game d 0
-
-move :: Game -> Move -> Game
-move g m = undefined
+move :: Tableau -> Move -> Tableau
+move t m = undefined
 
 main :: IO ()
 main = do
