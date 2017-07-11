@@ -19,7 +19,7 @@ Written for practice with Haskell and HaskellStack.
   * [ ] enter game Layout
   - [x] shuffle deck to create Layout
   - [x] Game type
-  * [ ] Use standard terms https://en.wikipedia.org/wiki/Glossary_of_patience_terms
+  * [x] Use standard terms https://en.wikipedia.org/wiki/Glossary_of_patience_terms
   - [ ] Move type for card moves, collecting dragons
   - [ ] move :: Game -> Move -> Game
   - [ ] Automatic moves of available cards
@@ -30,6 +30,5 @@ Written for practice with Haskell and HaskellStack.
   * [ ] Take moves until game win/loss
 
 ## Cleanups:
-  * [ ] Encode that `Game` has one and only one `Stack` per `Suit`, update `stackBySuit`
-  * [ ] Use `find` in `stackBySuit`
+  * [ ] Encode that `Game` has exactly one `Foundation` per `Suit`
   * [ ] Look at `Bound` or `Enum` for `Rank`
