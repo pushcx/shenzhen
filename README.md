@@ -22,6 +22,7 @@ Written for practice with Haskell and HaskellStack.
   - [x] Use [standard terms](https://en.wikipedia.org/wiki/Glossary_of_patience_terms)
   - [ ] Move type for card moves, collecting dragons
   - [ ] move :: Game -> Move -> Game
+  - [ ] replicate automatic build of released `Card`s
   - [ ] Automatic moves of available cards
   - [ ] Detect game win
   - [ ] Detect game loss
@@ -30,5 +31,6 @@ Written for practice with Haskell and HaskellStack.
   - [ ] Take moves until game win/loss
 
 ## Cleanups:
-  * [ ] Encode that `Game` has exactly one `Foundation` per `Suit`
-  * [ ] Look at `Bound` or `Enum` for `Rank`
+  - [ ] Encode that `Game` has exactly one `Foundation` per `Suit`
+  - [ ] Look at `Bound` or `Enum` for `Rank`
+  - [ ] `mayTakeTo` and `mkRunTo` want some kind of help

@@ -1,7 +1,7 @@
 module Main where
 
 import Data.List (concatMap, genericIndex, intercalate, transpose)
-import Data.List.Split (chunksOf)
+import Data.List.Split (chunksOf, endsWith, split)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
@@ -71,6 +71,37 @@ instance Show Foundation where
 type Column = [Card]
 topmost :: Column -> Maybe Card
 topmost = headMay
+
+-- A Run is at least one Sorted card, lowest Rank first, where each Card has
+-- the next higher Rank and a different Suit than previous
+type Run = [Card]
+
+validRunPair :: Card -> Card -> Bool
+validRunPair (Suited fs fr) (Suited ts tr) =
+  case nextRank fr of
+    (Just nr) -> fs /= ts && nr == tr
+    Nothing   -> False
+validRunPair _ _ = False
+
+mkRunTo :: Column -> Card -> Maybe Run
+mkRunTo [] card = Nothing
+mkRunTo col card =
+  case mayTakeTo col card of
+    Nothing -> Nothing
+    (Just possRun) ->
+      if and (zipWith validRunPair possRun (tail possRun))
+      then Just possRun
+      else Nothing
+
+mayTakeTo :: (Eq a) => [a] -> a -> Maybe [a]
+mayTakeTo [] _ = Nothing
+mayTakeTo cs card = halper (reverse cs) card
+  where
+    halper [] _ = Nothing
+    halper (c:cs) card =
+      if c == card
+      then Just (reverse (c:cs))
+      else halper cs card
 
 showcols :: [Column] -> String
 showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose cs)
@@ -144,11 +175,6 @@ mkBuildFromCell (Game (Tableau fcs _ foundations _) _) i = do
      else Nothing
 
 
-deck :: Deck
-deck = Flower : concatMap suitcards suits
-  where
-    suitcards suit = replicate 4 (Dragon suit) ++ map (Suited suit)
-                     [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
 
 tableau :: Deck -> Tableau
 tableau deck = Tableau
@@ -156,6 +182,13 @@ tableau deck = Tableau
              (Cell Nothing) -- TODO FlowerCell?
              (map (\suit -> Foundation suit []) suits)
              (chunksOf 5 deck)
+
+testcol = [Suited Bamboo One, Suited Dot Two, Suited Bamboo Three, Suited Dot Four, Flower, Suited Bamboo Five]
+deck :: Deck
+deck = Flower : concatMap suitcards suits
+  where
+    suitcards suit = replicate 4 (Dragon suit) ++ map (Suited suit)
+                    [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
 
 game d = Game d 0
 
