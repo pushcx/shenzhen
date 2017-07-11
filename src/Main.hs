@@ -31,6 +31,7 @@ instance Show Rank where
 
 
 data Card = Flower | Suited Rank Suit | Dragon Suit
+  deriving (Eq)
 
 instance Show Card where
   show Flower             = "Fl"
@@ -75,12 +76,12 @@ instance Show Layout where
     ++ " -> "   ++ unwords (map show ss)
     ++ "\n"     ++ showcols cs
 
-type MoveCount = Integer
+type MoveCount = Int
 data Game = Game Layout MoveCount
   deriving (Show)
 
-type ColumnIndex = Integer
-type FreeIndex = Integer
+type ColumnIndex = Int
+type FreeIndex = Int
 
 nextRank :: Rank -> Maybe Rank
 nextRank One   = Just Two
@@ -100,14 +101,30 @@ nextCardForStack (Stack suit []) = Just (Suited One suit)
 stackBySuit :: Suit -> [Stack] -> Stack
 stackBySuit suit stacks = head $ filter (\(Stack s _) -> s == suit) stacks
 
+maybeIndex :: [a] -> Int -> Maybe a
+maybeIndex [] _ = Nothing
+maybeIndex as i
+  | i < (length as - 1) = Just (as !! i)
+  | otherwise = Nothing
+
+
 data Move =
     MoveSingleFromColumnToFree ColumnIndex FreeIndex
   | MoveSingleFromFreeToColumn FreeIndex ColumnIndex
   | FinishColumn ColumnIndex
   | FinishFree FreeIndex
   | MoveRun ColumnIndex Card ColumnIndex
---mkFinishFree :: Game -> FreeIndex -> Maybe Move
---mkFinishFree (Game (Layout fcs _ stacks _) _) i
+  deriving (Show)
+
+mkFinishFree :: Game -> FreeIndex -> Maybe Move
+mkFinishFree (Game (Layout fcs _ stacks _) _) i = do
+  (FreeCell cell) <- maybeIndex fcs i
+  card <- cell
+  nextForStack <- nextCardForStack (stackBySuit (suitOf card) stacks)
+  if card == nextForStack
+     then return (FinishFree i)
+     else Nothing
+
 --  | i < (length fcs - 1) && nextCardForStack (stackBySuit suit stacks) == card = Just (FinishFree i)
 --  | otherwise = Nothing
 --  where
@@ -127,6 +144,8 @@ layout deck = Layout
              (FreeCell Nothing) -- TODO FlowerCell?
              (map (\suit -> Stack suit []) suits)
              (chunksOf 5 deck)
+
+game d = Game d 0
 
 move :: Game -> Move -> Game
 move g m = undefined
