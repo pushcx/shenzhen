@@ -2,6 +2,7 @@ module Main where
 
 import Data.List (concatMap, genericIndex, intercalate, transpose)
 import Data.List.Split (chunksOf)
+import Safe (lastMay)
 import System.Random.Shuffle (shuffleM)
 
 data Suit = Bamboo | Character | Dot
@@ -64,6 +65,9 @@ instance Show Stack where
   show (Stack suit cs) = show . head $ reverse cs
 type Column = [Card]
 
+topmost :: Column -> Maybe Card
+topmost = lastMay
+
 showcols :: [Column] -> String
 showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose cs)
 
@@ -114,7 +118,17 @@ data Move =
   | FinishColumn ColumnIndex
   | FinishFree FreeIndex
   | MoveRun ColumnIndex Card ColumnIndex
+  | Collect Suit
   deriving (Show)
+
+mkFinishColumn :: Game -> ColumnIndex -> Maybe Move
+mkFinishColumn (Game (Layout _ _ stacks cs) _) i = do
+  col <- maybeIndex cs i
+  card <- topmost col
+  nextForStack <- nextCardForStack (stackBySuit (suitOf card) stacks)
+  if card == nextForStack
+      then return (FinishColumn i)
+      else Nothing
 
 mkFinishFree :: Game -> FreeIndex -> Maybe Move
 mkFinishFree (Game (Layout fcs _ stacks _) _) i = do
@@ -125,12 +139,6 @@ mkFinishFree (Game (Layout fcs _ stacks _) _) i = do
      then return (FinishFree i)
      else Nothing
 
---  | i < (length fcs - 1) && nextCardForStack (stackBySuit suit stacks) == card = Just (FinishFree i)
---  | otherwise = Nothing
---  where
---    card = genericIndex fcs i
---    suit = suitOf card
---    rank = rankOf card
 
 deck :: Deck
 deck = Flower : concatMap suitcards suits

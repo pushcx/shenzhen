@@ -19,6 +19,7 @@ Written for practice with Haskell and HaskellStack.
   * [ ] enter game Layout
   - [x] shuffle deck to create Layout
   - [x] Game type
+  * [ ] Use standard terms https://en.wikipedia.org/wiki/Glossary_of_patience_terms
   - [ ] Move type for card moves, collecting dragons
   - [ ] move :: Game -> Move -> Game
   - [ ] Automatic moves of available cards
