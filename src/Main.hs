@@ -163,8 +163,8 @@ mkBuildFromColumn (Tableau _ _ foundations cs) i = do
   card <- topmost col
   next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
   if card == next
-      then return (BuildFromColumn i)
-      else Nothing
+  then return (BuildFromColumn i)
+  else Nothing
 
 mkBuildFromCell :: Tableau -> CellIndex -> Maybe Move
 mkBuildFromCell (Tableau cs _ foundations _) i = do
@@ -172,8 +172,8 @@ mkBuildFromCell (Tableau cs _ foundations _) i = do
   card <- cell
   next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
   if card == next
-     then return (BuildFromCell i)
-     else Nothing
+  then return (BuildFromCell i)
+  else Nothing
 
 mkPack :: Tableau -> ColumnIndex -> Card -> ColumnIndex -> Maybe Move
 mkPack (Tableau _ _ _ cs) from card to = do
