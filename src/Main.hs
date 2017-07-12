@@ -51,6 +51,7 @@ rankOf _ = error "can't get rank of Flower/Dragon"
 
 
 newtype Cell = Cell (Maybe Card)
+  deriving (Eq)
 type FlowerCell = Cell
 
 instance Show Cell where
@@ -59,6 +60,7 @@ instance Show Cell where
 
 
 data Foundation = Foundation Suit [Card]
+  deriving (Eq)
 
 instance Show Foundation where
   show (Foundation suit []) = "_" ++ show suit
@@ -111,11 +113,12 @@ validRunToCol cs run = validRunPair (last run) (head cs)
 showcols :: [Column] -> String
 showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose cs)
 
+type DragonCell = Either Cell Foundation
 
-data Tableau = Tableau [Cell] FlowerCell [Foundation] [Column]
+data Tableau = Tableau [DragonCell] FlowerCell [Foundation] [Column]
 instance Show Tableau where
-  show (Tableau cs f fs cs) =
-       "C: " ++ unwords (map show cs)
+  show (Tableau cells f fs cs) =
+       "C: " ++ unwords (map show cells)
     ++ " Fl: "  ++ show f
     ++ " -> "   ++ unwords (map show fs)
     ++ "\n"     ++ showcols cs
@@ -184,11 +187,25 @@ mkPack (Tableau _ _ _ cs) from card to = do
   then Just (Pack from card to)
   else Nothing
 
+mkCollectDragons :: Tableau -> Suit -> Maybe Move
+mkCollectDragons t suit =
+  if allDragonsAvailable t suit && cellOpenFor t suit
+  then Just (CollectDragons suit)
+  else Nothing
+    where
+      allDragonsAvailable :: Tableau -> Suit -> Bool
+      allDragonsAvailable (Tableau cells _ _ cols) suit =
+        inCells cells suit + inCols cols suit == 4
+      inCells :: [DragonCell] -> Suit -> Int
+      inCells cells suit = length $ filter (== Left (Cell (Just (Dragon suit)))) cells
+      inCols cols suit   = length $ filter (== Just (Dragon suit)) (map topmost cols)
+      cellOpenFor (Tableau cells _ _ _) suit =
+        not . null $ filter (\c -> c == Left (Cell (Just (Dragon suit))) || c == Left (Cell Nothing)) cells
 
 
 tableau :: Deck -> Tableau
 tableau deck = Tableau
-             [Cell Nothing, Cell Nothing, Cell Nothing]
+             [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
              (Cell Nothing) -- TODO FlowerCell?
              (map (\suit -> Foundation suit []) suits)
              (chunksOf 5 deck)
