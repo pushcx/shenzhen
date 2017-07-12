@@ -160,6 +160,25 @@ data Move =
   | CollectDragons Suit
   deriving (Show)
 
+mkMoveFromColumnToCell :: Tableau -> ColumnIndex -> CellIndex -> Maybe Move
+mkMoveFromColumnToCell (Tableau cells _ _ cols) coli celli = do
+  col <- maybeIndex cols coli
+  card <- topmost col
+  case maybeIndex cells celli of
+    Nothing -> Just (MoveFromColumnToCell coli celli)
+    _ -> Nothing
+
+mkMoveFromCellToColumn :: Tableau -> CellIndex -> ColumnIndex -> Maybe Move
+mkMoveFromCellToColumn (Tableau cells _ _ cols) celli coli = do
+  Left (Cell cell) <- maybeIndex cells celli
+  card <- cell
+  col <- maybeIndex cols coli
+  case col of
+    []    -> Just (MoveFromCellToColumn celli coli)
+    (c:_) -> if validRunPair card c
+                then Just (MoveFromCellToColumn celli coli)
+                else Nothing
+
 mkBuildFromColumn :: Tableau -> ColumnIndex -> Maybe Move
 mkBuildFromColumn (Tableau _ _ foundations cs) i = do
   col <- maybeIndex cs i
