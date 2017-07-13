@@ -1,13 +1,14 @@
 module Main where
 
-import Data.List (concatMap, genericIndex, intercalate, transpose)
-import Data.List.Split (chunksOf, endsWith, split)
+import Data.List (concatMap, intercalate, transpose)
+import Data.List.Split (chunksOf)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
 data Suit = Bamboo | Character | Dot
   deriving (Eq)
 
+suits :: [Suit]
 suits = [Bamboo, Character, Dot]
 
 instance Show Suit where
@@ -64,7 +65,7 @@ data Foundation = Foundation Suit [Card]
 
 instance Show Foundation where
   show (Foundation suit []) = "_" ++ show suit
-  show (Foundation suit cs) = show . head $ reverse cs
+  show (Foundation _    cs) = show . head $ reverse cs
 
 
 -- A vertical stack of cards. Stored topmost-first.
@@ -86,7 +87,7 @@ validRunPair (Suited fs fr) (Suited ts tr) =
 validRunPair _ _ = False
 
 mkRunTo :: Column -> Card -> Maybe Run
-mkRunTo [] card = Nothing
+mkRunTo [] _ = Nothing
 mkRunTo col card =
   case mayTakeTo col card of
     Nothing -> Nothing
@@ -97,7 +98,7 @@ mkRunTo col card =
 
 mayTakeTo :: (Eq a) => [a] -> a -> Maybe [a]
 mayTakeTo [] _ = Nothing
-mayTakeTo cs card = halper (reverse cs) card
+mayTakeTo collection target = halper (reverse collection) target
   where
     halper [] _ = Nothing
     halper (c:cs) card =
@@ -131,6 +132,7 @@ nextRank One   = Just Two
 nextRank Two   = Just Three
 nextRank Three = Just Four
 nextRank Four  = Just Five
+nextRank Five  = Just Six
 nextRank Six   = Just Seven
 nextRank Seven = Just Eight
 nextRank Eight = Just Nine
@@ -138,8 +140,9 @@ nextRank Nine  = Nothing
 
 
 nextCardForFoundation :: Foundation -> Maybe Card
-nextCardForFoundation (Foundation suit (Suited s r:_)) = fmap (Suited suit) (nextRank r)
+nextCardForFoundation (Foundation suit (Suited _ r:_)) = fmap (Suited suit) (nextRank r)
 nextCardForFoundation (Foundation suit []) = Just (Suited suit One)
+nextCardForFoundation (Foundation _ _) = error "Non-Suited card on Foundation"
 
 foundationBySuit :: Suit -> [Foundation] -> Foundation
 foundationBySuit suit foundations = head $ filter (\(Foundation s _) -> s == suit) foundations
@@ -163,7 +166,7 @@ data Move =
 mkMoveFromColumnToCell :: Tableau -> ColumnIndex -> CellIndex -> Maybe Move
 mkMoveFromColumnToCell (Tableau cells _ _ cols) coli celli = do
   col <- maybeIndex cols coli
-  card <- topmost col
+  _ <- topmost col -- only care that there is a card, not what it is
   case maybeIndex cells celli of
     Nothing -> Just (MoveFromColumnToCell coli celli)
     _ -> Nothing
@@ -207,9 +210,9 @@ mkPack (Tableau _ _ _ cs) from card to = do
   else Nothing
 
 mkCollectDragons :: Tableau -> Suit -> Maybe Move
-mkCollectDragons t suit =
-  if allDragonsAvailable t suit && cellOpenFor t suit
-  then Just (CollectDragons suit)
+mkCollectDragons t s =
+  if allDragonsAvailable t s && cellOpenFor t s
+  then Just (CollectDragons s)
   else Nothing
     where
       allDragonsAvailable :: Tableau -> Suit -> Bool
@@ -229,17 +232,15 @@ tableau deck = Tableau
              (map (\suit -> Foundation suit []) suits)
              (chunksOf 5 deck)
 
+testcol :: Column
 testcol = [Suited Bamboo One, Suited Dot Two, Suited Bamboo Three, Suited Dot Four, Flower, Suited Bamboo Five]
-deck :: Deck
-deck = Flower : concatMap suitcards suits
+standardDeck :: Deck
+standardDeck = Flower : concatMap suitcards suits
   where
     suitcards suit = replicate 4 (Dragon suit) ++ map (Suited suit)
                     [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
 
-move :: Tableau -> Move -> Tableau
-move t m = undefined
-
 main :: IO ()
 main = do
-  deal <- shuffleM deck
+  deal <- shuffleM standardDeck
   print (tableau deal)
