@@ -217,13 +217,21 @@ mkCollectDragons t s =
     where
       allDragonsAvailable :: Tableau -> Suit -> Bool
       allDragonsAvailable (Tableau cells _ _ cols) suit =
-        inCells cells suit + inCols cols suit == 4
-      inCells :: [DragonCell] -> Suit -> Int
-      inCells cells suit = length $ filter (== Left (Cell (Just (Dragon suit)))) cells
-      inCols cols suit   = length $ filter (== Just (Dragon suit)) (map topmost cols)
+        countDragonsInCells cells suit + countDragonsInCols cols suit == 4
       cellOpenFor (Tableau cells _ _ _) suit =
         not . null $ filter (\c -> c == Left (Cell (Just (Dragon suit))) || c == Left (Cell Nothing)) cells
 
+countDragonsInCells :: [DragonCell] -> Suit -> Int
+countDragonsInCells cells suit = length $ filter (== Left (Cell (Just (Dragon suit)))) cells
+
+countDragonsInCols :: [Column] -> Suit -> Int
+countDragonsInCols cols suit   = length $ filter (== Just (Dragon suit)) (map topmost cols)
+
+dragonsInCells :: [DragonCell] -> Suit -> [Card]
+dragonsInCells cells suit = replicate (countDragonsInCells cells suit) (Dragon suit)
+
+dragonsInCols :: [Column] -> Suit -> [Card]
+dragonsInCols cols suit = replicate (countDragonsInCols cols suit) (Dragon suit)
 
 tableau :: Deck -> Tableau
 tableau deck = Tableau
