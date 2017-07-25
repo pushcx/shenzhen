@@ -247,6 +247,11 @@ cellWithoutDragons anything _ = anything
 cellsWithoutDragons :: [DragonCell] -> Suit -> [DragonCell]
 cellsWithoutDragons cells suit = map (`cellWithoutDragons` suit) cells
 
+addCollectedDragonsToCells :: [DragonCell] -> Suit -> [DragonCell]
+addCollectedDragonsToCells [] _ = error "what? no empty cell"
+addCollectedDragonsToCells (Left (Cell Nothing):cs) s = Right (CollectedDragon s) : cs
+addCollectedDragonsToCells (c:cs) s = c : addCollectedDragonsToCells cs s
+
 colWithoutDragons :: Column -> Suit -> Column
 colWithoutDragons [] _ = []
 colWithoutDragons col@(c:cs) s
@@ -270,6 +275,17 @@ standardDeck = Flower : concatMap suitcards suits
   where
     suitcards suit = replicate 4 (Dragon suit) ++ map (Suited suit)
                     [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
+
+move :: Tableau -> Move -> Tableau
+move (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = undefined
+move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = undefined
+move (Tableau cells fl fo cols) (BuildFromColumn coli) = undefined
+move (Tableau cells fl fo cols) (BuildFromCell celli) = undefined
+move (Tableau cells fl fo cols) (Pack fromi card toi) = undefined
+move (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo newcols
+  where
+    newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
+    newcols = colsWithoutDragons cols suit
 
 main :: IO ()
 main = do
