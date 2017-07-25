@@ -114,7 +114,11 @@ validRunToCol cs run = validRunPair (last run) (head cs)
 showcols :: [Column] -> String
 showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose cs)
 
-type DragonCell = Either Cell Foundation
+data CollectedDragon = CollectedDragon Suit
+  deriving (Show, Eq)
+
+
+type DragonCell = Either Cell CollectedDragon
 
 data Tableau = Tableau [DragonCell] FlowerCell [Foundation] [Column]
 instance Show Tableau where
@@ -232,6 +236,25 @@ dragonsInCells cells suit = replicate (countDragonsInCells cells suit) (Dragon s
 
 dragonsInCols :: [Column] -> Suit -> [Card]
 dragonsInCols cols suit = replicate (countDragonsInCols cols suit) (Dragon suit)
+
+cellWithoutDragons :: DragonCell -> Suit -> DragonCell
+cellWithoutDragons c@(Left (Cell (Just (Dragon suit)))) s =
+  if suit == s
+     then Left (Cell Nothing)
+     else c
+cellWithoutDragons anything _ = anything
+
+cellsWithoutDragons :: [DragonCell] -> Suit -> [DragonCell]
+cellsWithoutDragons cells suit = map (`cellWithoutDragons` suit) cells
+
+colWithoutDragons :: Column -> Suit -> Column
+colWithoutDragons [] _ = []
+colWithoutDragons col@(c:cs) s
+  | c == Dragon s = cs
+  | otherwise = col
+
+colsWithoutDragons :: [Column] -> Suit -> [Column]
+colsWithoutDragons cells suit = map (`colWithoutDragons` suit) cells
 
 tableau :: Deck -> Tableau
 tableau deck = Tableau
