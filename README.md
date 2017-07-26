@@ -4,6 +4,7 @@ Solves games of Shenzhen Solitaire,
 a minigame [available standalone](http://store.steampowered.com/app/570490/SHENZHEN_SOLITAIRE/)
 or as part of [Shenzhen I/O](http://www.zachtronics.com/shenzhen-io/)
 from [Zachtronics](http://www.zachtronics.com/).
+Here's an [video intro to the gameplay](https://www.youtube.com/watch?v=kT7bEJQsVYk).
 
 ![gameplay screenshot](screenshot.jpg)
 
