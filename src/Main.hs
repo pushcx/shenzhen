@@ -1,6 +1,6 @@
 module Main where
 
-import Data.List (concatMap, intercalate, transpose)
+import Data.List (concatMap, elemIndices, intercalate, transpose)
 import Data.List.Split (chunksOf)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
@@ -283,11 +283,22 @@ standardDeck = Flower : concatMap suitcards suits
     suitcards suit = replicate 4 (Dragon suit) ++ map (Suited suit)
                     [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
 
+replaceIndex :: Int -> a -> [a] -> [a]
+replaceIndex i new list = take i list ++ new : drop (i + 1) list
+
 move :: Tableau -> Move -> Tableau
 move (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = undefined
 move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = undefined
 move (Tableau cells fl fo cols) (BuildFromColumn coli) = undefined
-move (Tableau cells fl fo cols) (BuildFromCell celli) = undefined
+move (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
+  where
+    Left (Cell cell) = cells !! celli
+    (Just card) = cell
+    suit = suitOf card
+    newCells = replaceIndex celli (Left (Cell Nothing)) cells
+    foundation = foundationBySuit suit fo
+    newF (Foundation _ cards) = Foundation suit (card : cards)
+    newFs = replaceIndex (head $ elemIndices foundation fo) (newF foundation) fo
 move (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
   where
     fromCol = cols !! fromi
@@ -295,7 +306,6 @@ move (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newC
     run = unsafeTakeTo fromCol card
     shortenedFromCol = drop (length run) fromCol
     lengthenedToCol = run ++ toCol
-    replaceIndex i new list = take i list ++ new : drop (i + 1) list
     newCols = replaceIndex fromi shortenedFromCol (replaceIndex toi lengthenedToCol cols)
 
 move (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo newcols
