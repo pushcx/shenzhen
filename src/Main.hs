@@ -294,9 +294,21 @@ buildCardToFoundations fo card = replaceIndex i (newF foundation) fo
     i = head $ elemIndices foundation fo
     newF (Foundation _ cards) = Foundation suit (card : cards)
 
+takeCardFromCell :: [DragonCell] -> Int -> (Card, [DragonCell])
+takeCardFromCell cells i = (card, newCells)
+  where
+    Left (Cell cell) = cells !! i
+    (Just card) = cell
+    newCells = replaceIndex i (Left (Cell Nothing)) cells
+
 move :: Tableau -> Move -> Tableau
 move (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = undefined
-move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = undefined
+move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = Tableau newCells fl fo newCols
+  where
+    (card, newCells) = takeCardFromCell cells celli
+    oldCol = cols !! coli
+    newCol = card : oldCol
+    newCols = replaceIndex coli newCol cols
 move (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs newCols
   where
     fromCol = cols !! coli
@@ -306,9 +318,7 @@ move (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs 
     newFs = buildCardToFoundations fo card
 move (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
   where
-    Left (Cell cell) = cells !! celli
-    (Just card) = cell
-    newCells = replaceIndex celli (Left (Cell Nothing)) cells
+    (card, newCells) = takeCardFromCell cells celli
     newFs = buildCardToFoundations fo card
 move (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
   where

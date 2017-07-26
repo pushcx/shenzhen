@@ -24,9 +24,9 @@ Written for practice with Haskell and HaskellStack.
   - [x] Move type for card moves, collecting dragons
   - [ ] `move :: Game -> Move -> Game`
     - [ ] `move` with `MoveFromColumnToCell`
-    - [ ] `move` with `MoveFromCellToColumn`
-    - [ ] `move` with `BuildFromColumn`
-    - [ ] `move` with `BuildFromCell`
+    - [x] `move` with `MoveFromCellToColumn`
+    - [x] `move` with `BuildFromColumn`
+    - [x] `move` with `BuildFromCell`
     - [x] `move` with `Pack`
     - [x] `move` with `CollectDragons`
   - [ ] replicate automatic build of released `Card`s
