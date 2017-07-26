@@ -337,7 +337,6 @@ move (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newC
     shortenedFromCol = drop (length run) fromCol
     lengthenedToCol = run ++ toCol
     newCols = replaceIndex fromi shortenedFromCol (replaceIndex toi lengthenedToCol cols)
-
 move (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo newcols
   where
     newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
