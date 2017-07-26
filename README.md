@@ -30,7 +30,6 @@ Written for practice with Haskell and HaskellStack.
     - [x] `move` with `Pack`
     - [x] `move` with `CollectDragons`
   - [ ] replicate automatic build of released `Card`s
-  - [ ] Automatic moves of available cards
   - [ ] Detect game win
   - [ ] Detect game loss
   - [ ] Generate list of possible Moves for a position
