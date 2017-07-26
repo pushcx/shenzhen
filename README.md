@@ -29,9 +29,13 @@ Written for practice with Haskell and HaskellStack.
   - [ ] Generate list of possible Moves for a position
   - [ ] Filter possible Moves against Game history to avoid loops
   - [ ] Take moves until game win/loss
+  - [ ] QuickCheck that the number + distribution of cards in the game is constant
 
-## Cleanups:
+## Cleanups and open questions:
+
   - [ ] Encode that `Tableau` has exactly one `Foundation` per `Suit`
   - [ ] Encode that `Tableau` has exactly one `DragonCell` per `Suit`
   - [ ] Look at `Bound` or `Enum` for `Rank`
   - [ ] `mayTakeTo` and `mkRunTo` want some kind of help
+  - [ ] The `Move` constructors must enforce validity to avoid passing around broken `Move` data, but then `move` has none. Does this make `move` clear or unsafe? What if this was more mature with `Move` in its own module not exporting the default constructor?
+  - [ ] This ties into `mayTakeTo` and `unsafeTakeTo`. `mkMove` must use the former but `move` really wants unsafe to avoid unwrapping `Maybe`. I can't even see how to unwrap it, really.

@@ -44,11 +44,11 @@ type Deck = [Card]
 suitOf :: Card -> Suit
 suitOf (Suited s _) = s
 suitOf (Dragon s) = s
-suitOf _ = error "can't get suit of Flower"
+suitOf _ = error "Flower doesn't have a suit"
 
 rankOf :: Card -> Rank
 rankOf (Suited _ r) = r
-rankOf _ = error "can't get rank of Flower/Dragon"
+rankOf _ = error "Flower and Dragon cards don't have a suit"
 
 
 newtype Cell = Cell (Maybe Card)
@@ -105,6 +105,13 @@ mayTakeTo collection target = halper (reverse collection) target
       if c == card
       then Just (reverse (c:cs))
       else halper cs card
+
+unsafeTakeTo :: (Eq a) => [a] -> a -> [a]
+unsafeTakeTo [] _ = error "element not in list, I warned you I was unsafe"
+unsafeTakeTo (c:cs) card =
+  if c == card
+  then reverse (c:cs)
+  else unsafeTakeTo cs card
 
 validRunToCol :: Column -> Run -> Bool
 validRunToCol [] _ = True
@@ -281,7 +288,16 @@ move (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = undefined
 move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = undefined
 move (Tableau cells fl fo cols) (BuildFromColumn coli) = undefined
 move (Tableau cells fl fo cols) (BuildFromCell celli) = undefined
-move (Tableau cells fl fo cols) (Pack fromi card toi) = undefined
+move (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
+  where
+    fromCol = cols !! fromi
+    toCol = cols !! toi
+    run = unsafeTakeTo fromCol card
+    shortenedFromCol = drop (length run) fromCol
+    lengthenedToCol = run ++ toCol
+    replaceIndex i new list = take i list ++ new : drop (i + 1) list
+    newCols = replaceIndex fromi shortenedFromCol (replaceIndex toi lengthenedToCol cols)
+
 move (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo newcols
   where
     newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
