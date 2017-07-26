@@ -286,19 +286,30 @@ standardDeck = Flower : concatMap suitcards suits
 replaceIndex :: Int -> a -> [a] -> [a]
 replaceIndex i new list = take i list ++ new : drop (i + 1) list
 
+buildCardToFoundations :: [Foundation] -> Card -> [Foundation]
+buildCardToFoundations fo card = replaceIndex i (newF foundation) fo
+  where
+    suit = suitOf card
+    foundation = foundationBySuit suit fo
+    i = head $ elemIndices foundation fo
+    newF (Foundation _ cards) = Foundation suit (card : cards)
+
 move :: Tableau -> Move -> Tableau
 move (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = undefined
 move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = undefined
-move (Tableau cells fl fo cols) (BuildFromColumn coli) = undefined
+move (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs newCols
+  where
+    fromCol = cols !! coli
+    card = head fromCol
+    newCol = drop 1 fromCol
+    newCols = replaceIndex coli newCol cols
+    newFs = buildCardToFoundations fo card
 move (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
   where
     Left (Cell cell) = cells !! celli
     (Just card) = cell
-    suit = suitOf card
     newCells = replaceIndex celli (Left (Cell Nothing)) cells
-    foundation = foundationBySuit suit fo
-    newF (Foundation _ cards) = Foundation suit (card : cards)
-    newFs = replaceIndex (head $ elemIndices foundation fo) (newF foundation) fo
+    newFs = buildCardToFoundations fo card
 move (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
   where
     fromCol = cols !! fromi
