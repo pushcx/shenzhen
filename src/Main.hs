@@ -301,8 +301,20 @@ takeCardFromCell cells i = (card, newCells)
     (Just card) = cell
     newCells = replaceIndex i (Left (Cell Nothing)) cells
 
+takeCardFromCol :: [Column] -> Int -> (Card, [Column])
+takeCardFromCol cols i = (card, newCols)
+  where
+    fromCol = cols !! i
+    card = head fromCol
+    newCol = drop 1 fromCol
+    newCols = replaceIndex i newCol cols
+
 move :: Tableau -> Move -> Tableau
-move (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = undefined
+move (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = Tableau newCells fl fo newCols
+  where
+    (card, newCols) = takeCardFromCol cols coli
+    newCell = Left (Cell (Just card))
+    newCells = replaceIndex celli newCell cells
 move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = Tableau newCells fl fo newCols
   where
     (card, newCells) = takeCardFromCell cells celli
@@ -311,10 +323,7 @@ move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = Tableau newC
     newCols = replaceIndex coli newCol cols
 move (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs newCols
   where
-    fromCol = cols !! coli
-    card = head fromCol
-    newCol = drop 1 fromCol
-    newCols = replaceIndex coli newCol cols
+    (card, newCols) = takeCardFromCol cols coli
     newFs = buildCardToFoundations fo card
 move (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
   where

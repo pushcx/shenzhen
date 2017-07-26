@@ -22,8 +22,8 @@ Written for practice with Haskell and HaskellStack.
   - [ ] Game type
   - [x] Use [standard terms](https://en.wikipedia.org/wiki/Glossary_of_patience_terms)
   - [x] Move type for card moves, collecting dragons
-  - [ ] `move :: Game -> Move -> Game`
-    - [ ] `move` with `MoveFromColumnToCell`
+  - [x] `move :: Game -> Move -> Game`
+    - [x] `move` with `MoveFromColumnToCell`
     - [x] `move` with `MoveFromCellToColumn`
     - [x] `move` with `BuildFromColumn`
     - [x] `move` with `BuildFromCell`
