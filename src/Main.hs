@@ -119,7 +119,7 @@ validRunToCol [] _ = True
 validRunToCol cs run = validRunPair (last run) (head cs)
 
 showcols :: [Column] -> String
-showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose cs)
+showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose $ map reverse cs)
 
 newtype CollectedDragon = CollectedDragon Suit
   deriving (Show, Eq)
