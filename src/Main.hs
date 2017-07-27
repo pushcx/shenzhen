@@ -342,6 +342,7 @@ move (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo n
     newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
     newcols = colsWithoutDragons cols suit
 
+
 main :: IO ()
 main = do
   deal <- shuffleM standardDeck
