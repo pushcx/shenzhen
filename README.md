@@ -4,7 +4,8 @@ Solves games of Shenzhen Solitaire,
 a minigame [available standalone](http://store.steampowered.com/app/570490/SHENZHEN_SOLITAIRE/)
 or as part of [Shenzhen I/O](http://www.zachtronics.com/shenzhen-io/)
 from [Zachtronics](http://www.zachtronics.com/).
-Here's an [video intro to the gameplay](https://www.youtube.com/watch?v=kT7bEJQsVYk).
+Here's an [video intro to the gameplay](https://www.youtube.com/watch?v=kT7bEJQsVYk), but if you know FreeCell it's basically that with three suits and "dragon" cards that block gameplay.
+And this [glossary of Solitaire terms](https://functor.tokyo/blog/2017-07-28-ghc-warnings-you-should-enable) may be useful.
 
 ![gameplay screenshot](screenshot.jpg)
 
@@ -39,6 +40,7 @@ Written for practice with Haskell and HaskellStack.
 
 ## Cleanups and open questions:
 
+  - [ ] Organize code into modules, don't export constructors or move's utility functions that are unsafe
   - [ ] Encode that `Tableau` has exactly one `Foundation` per `Suit`
   - [ ] Encode that `Tableau` has exactly one `DragonCell` per `Suit`
   - [ ] Encode that `FlowerCell` can only hold a `Flower`
