@@ -1,7 +1,9 @@
 module Main where
 
+import Data.Either (lefts)
 import Data.List (concatMap, elemIndices, intercalate, transpose)
 import Data.List.Split (chunksOf)
+import Data.Maybe (catMaybes)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
@@ -341,6 +343,12 @@ move (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo n
   where
     newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
     newcols = colsWithoutDragons cols suit
+
+availableCards :: Tableau -> [Card]
+availableCards (Tableau cells _ _ cols) = fromCells ++ fromCols
+  where
+    fromCells = catMaybes $ map (\(Cell m) -> m) $ lefts cells
+    fromCols = catMaybes $ map topmost cols
 
 
 main :: IO ()
