@@ -3,7 +3,7 @@ version:             0.1.0.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/pushcx/shenzhen#readme
-license:             AGPLv3
+license:             AGPL-3
 license-file:        LICENSE
 author:              Peter Bhat Harkins
 maintainer:          peter@push.cx
