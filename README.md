@@ -33,7 +33,8 @@ Written for practice with Haskell and HaskellStack.
   - [x] replicate automatic build of released `Card`s
   - [x] automatically build `Flower`
   - [x] automatically build after player `Move` applied
-  - [ ] Detect game win
+  - [ ] automatically build at game start
+  - [x] Detect game win
   - [ ] Detect game loss
   - [ ] Generate list of possible Moves for a position
   - [ ] Filter possible Moves against Game history to avoid loops

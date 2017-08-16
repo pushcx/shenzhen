@@ -389,6 +389,9 @@ move tab m =
     Nothing -> newTab
     (Just build) -> move tab build
 
+won :: Tableau -> Bool
+won (Tableau _ _ _ cells) = all (== []) cells
+
 main :: IO ()
 main = do
   deal <- shuffleM standardDeck
