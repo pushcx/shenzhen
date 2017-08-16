@@ -3,7 +3,7 @@ module Main where
 import Data.Either (lefts)
 import Data.List (concatMap, elemIndices, intercalate, transpose)
 import Data.List.Split (chunksOf)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, listToMaybe)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
@@ -20,7 +20,7 @@ instance Show Suit where
 
 
 data Rank = One | Two | Three | Four | Five | Six | Seven | Eight | Nine
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 instance Show Rank where
   show One   = "1"
@@ -151,6 +151,10 @@ nextRank Seven = Just Eight
 nextRank Eight = Just Nine
 nextRank Nine  = Nothing
 
+nextRankForFoundation :: Foundation -> Maybe Rank
+nextRankForFoundation (Foundation _ (Suited _ r:_)) = nextRank r
+nextRankForFoundation (Foundation _ [])             = Just One
+nextRankForFoundation (Foundation _ _) = error "Non-Suited card on Foundation"
 
 nextCardForFoundation :: Foundation -> Maybe Card
 nextCardForFoundation (Foundation suit (Suited _ r:_)) = fmap (Suited suit) (nextRank r)
@@ -350,6 +354,37 @@ availableCards (Tableau cells _ _ cols) = fromCells ++ fromCols
     fromCells = catMaybes $ map (\(Cell m) -> m) $ lefts cells
     fromCols = catMaybes $ map topmost cols
 
+highestRankAutomaticallyBuildable :: [Foundation] -> Rank
+highestRankAutomaticallyBuildable fos = minimum $ catMaybes $ map nextRankForFoundation fos
+
+automaticallyBuildable :: [Foundation] -> Card -> Bool
+automaticallyBuildable fos card@(Suited suit rank) =
+  case nextCardForFoundation fo of
+    Nothing -> False
+    (Just nextCard) -> card == nextCard && rank <= highestRankAutomaticallyBuildable fos
+  where
+    fo = foundationBySuit suit fos
+
+cardBuilt :: Tableau -> Move -> Card
+cardBuilt (Tableau _ _ _ cols) (BuildFromColumn coli) = head $ cols !! coli
+cardBuilt (Tableau cells _ _ _) (BuildFromCell celli) = (\(Left (Cell (Just card))) -> card) $ cells !! celli
+cardBuilt _ _ = error "No card built for this move"
+
+automaticBuild :: Tableau -> Maybe Move
+automaticBuild tab@(Tableau _ _ fos _) =
+  (listToMaybe . filter (automaticallyBuildable fos . cardBuilt tab) . catMaybes)
+    [ mkBuildFromCell tab 0
+    , mkBuildFromCell tab 1
+    , mkBuildFromCell tab 2
+    , mkBuildFromColumn tab 0
+    , mkBuildFromColumn tab 1
+    , mkBuildFromColumn tab 2
+    , mkBuildFromColumn tab 3
+    , mkBuildFromColumn tab 4
+    , mkBuildFromColumn tab 5
+    , mkBuildFromColumn tab 6
+    , mkBuildFromColumn tab 7
+    ]
 
 main :: IO ()
 main = do

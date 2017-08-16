@@ -30,7 +30,9 @@ Written for practice with Haskell and HaskellStack.
     - [x] `move` with `BuildFromCell`
     - [x] `move` with `Pack`
     - [x] `move` with `CollectDragons`
-  - [ ] replicate automatic build of released `Card`s
+  - [x] replicate automatic build of released `Card`s
+  - [ ] automatically build `Flower`
+  - [ ] automatically build after player `Move` applied
   - [ ] Detect game win
   - [ ] Detect game loss
   - [ ] Generate list of possible Moves for a position
@@ -40,7 +42,8 @@ Written for practice with Haskell and HaskellStack.
 
 ## Cleanups and open questions:
 
-  - [ ] Organize code into modules, don't export constructors or move's utility functions that are unsafe
+  - [ ] Organize code into modules, don't export constructors or the many unsafe utility functions for `Move`s
+  - [ ] Silence `-Wincomplete-patterns` and `-Wincomplete-uni-patterns` on util funcitons
   - [ ] Encode that `Tableau` has exactly one `Foundation` per `Suit`
   - [ ] Encode that `Tableau` has exactly one `DragonCell` per `Suit`
   - [ ] Encode that `FlowerCell` can only hold a `Flower`
