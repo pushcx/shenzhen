@@ -1,9 +1,8 @@
 module Main where
 
-import Data.Either (lefts)
 import Data.List (concatMap, elemIndices, intercalate, transpose)
 import Data.List.Split (chunksOf)
-import Data.Maybe (catMaybes, listToMaybe, mapMaybe)
+import Data.Maybe (listToMaybe, mapMaybe)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
@@ -358,14 +357,8 @@ move (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo n
     newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
     newcols = colsWithoutDragons cols suit
 
-availableCards :: Tableau -> [Card]
-availableCards (Tableau cells _ _ cols) = fromCells ++ fromCols
-  where
-    fromCells = catMaybes $ map (\(Cell m) -> m) $ lefts cells
-    fromCols = catMaybes $ map topmost cols
-
 highestRankAutomaticallyBuildable :: [Foundation] -> Rank
-highestRankAutomaticallyBuildable fos = minimum $ catMaybes $ map nextRankForFoundation fos
+highestRankAutomaticallyBuildable fos = minimum $ mapMaybe nextRankForFoundation fos
 
 automaticallyBuildable :: [Foundation] -> Card -> Bool
 automaticallyBuildable fos card@(Suited suit rank) =
@@ -382,19 +375,7 @@ cardBuilt _ _ = error "No card built for this move"
 
 automaticBuild :: Tableau -> Maybe Move
 automaticBuild tab@(Tableau _ _ fos _) =
-  (listToMaybe . filter (automaticallyBuildable fos . cardBuilt tab) . catMaybes)
-    [ mkBuildFromCell tab 0
-    , mkBuildFromCell tab 1
-    , mkBuildFromCell tab 2
-    , mkBuildFromColumn tab 0
-    , mkBuildFromColumn tab 1
-    , mkBuildFromColumn tab 2
-    , mkBuildFromColumn tab 3
-    , mkBuildFromColumn tab 4
-    , mkBuildFromColumn tab 5
-    , mkBuildFromColumn tab 6
-    , mkBuildFromColumn tab 7
-    ]
+  listToMaybe $ filter (automaticallyBuildable fos . cardBuilt tab) $ mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..7]
 
 main :: IO ()
 main = do
