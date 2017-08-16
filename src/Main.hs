@@ -2,7 +2,7 @@ module Main where
 
 import Data.List (concatMap, elemIndices, intercalate, transpose)
 import Data.List.Split (chunksOf)
-import Data.Maybe (listToMaybe, mapMaybe)
+import Data.Maybe (listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
@@ -371,11 +371,12 @@ automaticallyBuildable fos card@(Suited suit rank) =
 cardBuilt :: Tableau -> Move -> Card
 cardBuilt (Tableau _ _ _ cols) (BuildFromColumn coli) = head $ cols !! coli
 cardBuilt (Tableau cells _ _ _) (BuildFromCell celli) = (\(Left (Cell (Just card))) -> card) $ cells !! celli
+cardBuilt _ (BuildFlower _) = Flower
 cardBuilt _ _ = error "No card built for this move"
 
 automaticBuild :: Tableau -> Maybe Move
 automaticBuild tab@(Tableau _ _ fos _) =
-  listToMaybe $ filter (automaticallyBuildable fos . cardBuilt tab) $ mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..7]
+  listToMaybe $ filter (automaticallyBuildable fos . cardBuilt tab) $ maybeToList (mkBuildFlower tab) ++ (mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..7])
 
 main :: IO ()
 main = do
