@@ -23,4 +23,5 @@ executable shenzhen
   hs-source-dirs:      src
   ghc-options:         -Wall -Wincomplete-uni-patterns
                        -Wincomplete-record-updates -Wmissing-import-lists
+                       -Wtabs
   main-is:             Main.hs
