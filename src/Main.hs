@@ -286,7 +286,7 @@ colsWithoutDragons cells suit = map (`colWithoutDragons` suit) cells
 tableau :: Deck -> Tableau
 tableau deck = Tableau
              [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
-             (Cell Nothing) -- TODO FlowerCell?
+             (Cell Nothing)
              (map (\suit -> Foundation suit []) suits)
              (chunksOf 5 deck)
 
@@ -324,27 +324,30 @@ takeCardFromCol cols i = (card, newCols)
     newCol = drop 1 fromCol
     newCols = replaceIndex i newCol cols
 
-move :: Tableau -> Move -> Tableau
-move (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = Tableau newCells fl fo newCols
+applyMove :: Tableau -> Move -> Tableau
+applyMove (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = Tableau newCells fl fo newCols
   where
     (card, newCols) = takeCardFromCol cols coli
     newCell = Left (Cell (Just card))
     newCells = replaceIndex celli newCell cells
-move (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = Tableau newCells fl fo newCols
+applyMove (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = Tableau newCells fl fo newCols
   where
     (card, newCells) = takeCardFromCell cells celli
     oldCol = cols !! coli
     newCol = card : oldCol
     newCols = replaceIndex coli newCol cols
-move (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs newCols
+applyMove (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs newCols
   where
     (card, newCols) = takeCardFromCol cols coli
     newFs = buildCardToFoundations fo card
-move (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
+applyMove (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
   where
     (card, newCells) = takeCardFromCell cells celli
     newFs = buildCardToFoundations fo card
-move (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
+applyMove (Tableau cells _ fos cols) (BuildFlower coli) = Tableau cells (Cell $ Just card) fos newCols
+  where
+    (card, newCols) = takeCardFromCol cols coli
+applyMove (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
   where
     fromCol = cols !! fromi
     toCol = cols !! toi
@@ -352,7 +355,7 @@ move (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newC
     shortenedFromCol = drop (length run) fromCol
     lengthenedToCol = run ++ toCol
     newCols = replaceIndex fromi shortenedFromCol (replaceIndex toi lengthenedToCol cols)
-move (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo newcols
+applyMove (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo newcols
   where
     newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
     newcols = colsWithoutDragons cols suit
@@ -367,6 +370,7 @@ automaticallyBuildable fos card@(Suited suit rank) =
     (Just nextCard) -> card == nextCard && rank <= highestRankAutomaticallyBuildable fos
   where
     fo = foundationBySuit suit fos
+automaticallyBuildable _ _ = error "shouldn't be trying to build Flower/Dragon"
 
 cardBuilt :: Tableau -> Move -> Card
 cardBuilt (Tableau _ _ _ cols) (BuildFromColumn coli) = head $ cols !! coli
@@ -377,6 +381,13 @@ cardBuilt _ _ = error "No card built for this move"
 automaticBuild :: Tableau -> Maybe Move
 automaticBuild tab@(Tableau _ _ fos _) =
   listToMaybe $ filter (automaticallyBuildable fos . cardBuilt tab) $ maybeToList (mkBuildFlower tab) ++ (mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..7])
+
+move :: Tableau -> Move -> Tableau
+move tab m =
+  let newTab = applyMove tab m in
+    case automaticBuild newTab of
+    Nothing -> newTab
+    (Just build) -> move tab build
 
 main :: IO ()
 main = do
