@@ -3,7 +3,7 @@ module Main where
 import Data.Either (lefts)
 import Data.List (concatMap, elemIndices, intercalate, transpose)
 import Data.List.Split (chunksOf)
-import Data.Maybe (catMaybes, listToMaybe)
+import Data.Maybe (catMaybes, listToMaybe, mapMaybe)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
@@ -176,6 +176,7 @@ data Move =
   | MoveFromCellToColumn CellIndex ColumnIndex
   | BuildFromColumn ColumnIndex
   | BuildFromCell CellIndex
+  | BuildFlower ColumnIndex
   | Pack ColumnIndex Card ColumnIndex
   | CollectDragons Suit
   deriving (Show)
@@ -216,6 +217,15 @@ mkBuildFromCell (Tableau cs _ foundations _) i = do
   if card == next
   then return (BuildFromCell i)
   else Nothing
+
+mkBuildFlower :: Tableau -> Maybe Move
+mkBuildFlower (Tableau _ _ _ cols) =
+  listToMaybe $ mapMaybe mayFlower [0..7]
+  where
+    mayFlower coli = do
+      col <- maybeIndex cols coli
+      Flower <- topmost col
+      Just (BuildFlower coli)
 
 mkPack :: Tableau -> ColumnIndex -> Card -> ColumnIndex -> Maybe Move
 mkPack (Tableau _ _ _ cs) from card to = do

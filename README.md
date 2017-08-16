@@ -31,7 +31,7 @@ Written for practice with Haskell and HaskellStack.
     - [x] `move` with `Pack`
     - [x] `move` with `CollectDragons`
   - [x] replicate automatic build of released `Card`s
-  - [ ] automatically build `Flower`
+  - [x] automatically build `Flower`
   - [ ] automatically build after player `Move` applied
   - [ ] Detect game win
   - [ ] Detect game loss
