@@ -166,7 +166,7 @@ foundationBySuit suit foundations = head $ filter (\(Foundation s _) -> s == sui
 maybeIndex :: [a] -> Int -> Maybe a
 maybeIndex [] _ = Nothing
 maybeIndex as i
-  | i < (length as - 1) = Just (as !! i)
+  | i <= (length as - 1) = Just (as !! i)
   | otherwise = Nothing
 
 
@@ -185,7 +185,9 @@ mkMoveFromColumnToCell (Tableau cells _ _ cols) coli celli = do
   col <- maybeIndex cols coli
   _ <- topmost col -- only care that there is a card, not what it is
   case maybeIndex cells celli of
-    Nothing -> Just (MoveFromColumnToCell coli celli)
+    Nothing -> Nothing
+    (Just (Right _)) -> Nothing
+    (Just (Left (Cell Nothing))) -> Just (MoveFromColumnToCell coli celli)
     _ -> Nothing
 
 mkMoveFromCellToColumn :: Tableau -> CellIndex -> ColumnIndex -> Maybe Move
