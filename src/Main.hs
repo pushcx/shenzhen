@@ -411,13 +411,18 @@ possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
   [mkPack tab fromi card toi | fromi <- [0..7], card <- lastCardsOfRuns (cols !! fromi), toi <- [0..7]] ++
   [mkCollectDragons tab suit | suit <- suits]
 
+
 data Game = Game Tableau [Move]
 
+
+game :: Tableau -> Game
+game t = Game t []
+
 current :: Game -> Tableau
-current (Game start moves) = foldl' move start moves
+current (Game start moves) = foldl' step start moves
 
 previous :: Game -> [Tableau]
-previous (Game start moves) = scanl move start moves
+previous (Game start moves) = scanl step start moves
 
 novelPossibleMoves :: Game -> [Move]
 novelPossibleMoves game = novel
@@ -425,12 +430,20 @@ novelPossibleMoves game = novel
     now = current game
     moves = possibleMoves now
     seen = previous game
-    possibleNexts = map (move now) moves
+    possibleNexts = map (step now) moves
     paired = zip moves possibleNexts
     novel = map fst $ filter (\(_, tab) -> tab `notElem` seen) paired
 
 lost :: Game -> Bool
 lost game = not (won $ current game) && null (novelPossibleMoves game)
+
+-- After each player move there may be one or more automatic builds
+step :: Tableau -> Move -> Tableau
+step t m = case automaticBuild next of
+             Nothing -> next
+             (Just b) -> step next b
+  where
+    next = move t m
 
 main :: IO ()
 main = do
