@@ -1,6 +1,6 @@
 module Main where
 
-import Data.List (concatMap, elemIndices, intercalate, transpose)
+import Data.List ((\\), concatMap, elemIndices, foldl', intercalate, transpose)
 import Data.List.Split (chunksOf)
 import Data.Maybe (catMaybes, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
@@ -136,6 +136,7 @@ newtype CollectedDragon = CollectedDragon Suit
 type DragonCell = Either Cell CollectedDragon
 
 data Tableau = Tableau [DragonCell] FlowerCell [Foundation] [Column]
+  deriving (Eq)
 instance Show Tableau where
   show (Tableau cells f fs cs) =
        "C: " ++ unwords (map show cells)
@@ -409,6 +410,27 @@ possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
   [mkBuildFromCell tab celli | celli <- [0..2]] ++
   [mkPack tab fromi card toi | fromi <- [0..7], card <- lastCardsOfRuns (cols !! fromi), toi <- [0..7]] ++
   [mkCollectDragons tab suit | suit <- suits]
+
+data Game = Game Tableau [Move]
+
+current :: Game -> Tableau
+current (Game start moves) = foldl' move start moves
+
+previous :: Game -> [Tableau]
+previous (Game start moves) = scanl move start moves
+
+novelPossibleMoves :: Game -> [Move]
+novelPossibleMoves game = novel
+  where
+    now = current game
+    moves = possibleMoves now
+    seen = previous game
+    possibleNexts = map (move now) moves
+    paired = zip moves possibleNexts
+    novel = map fst $ filter (\(_, tab) -> tab `notElem` seen) paired
+
+lost :: Game -> Bool
+lost game = not (won $ current game) && null (novelPossibleMoves game)
 
 main :: IO ()
 main = do
