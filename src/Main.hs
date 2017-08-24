@@ -2,7 +2,7 @@ module Main where
 
 import Data.List (concatMap, elemIndices, intercalate, transpose)
 import Data.List.Split (chunksOf)
-import Data.Maybe (listToMaybe, mapMaybe, maybeToList)
+import Data.Maybe (catMaybes, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
@@ -79,6 +79,13 @@ topmost = headMay
 -- A Run is at least one Sorted card, lowest Rank first, where each Card has
 -- the next higher Rank and a different Suit than previous
 type Run = [Card]
+
+-- finds all Runs in a column: a 3-card run must have a 2 and 1 card
+-- that can be taken independently
+lastCardsOfRuns :: Column -> [Card]
+lastCardsOfRuns [] = []
+lastCardsOfRuns [c] = [c]
+lastCardsOfRuns col = head col : map snd (takeWhile fst $ zipWith (\c d -> (validRunPair c d, d)) col (tail col))
 
 validRunPair :: Card -> Card -> Bool
 validRunPair (Suited fs fr) (Suited ts tr) =
@@ -393,6 +400,15 @@ move tab m =
 
 won :: Tableau -> Bool
 won (Tableau _ _ _ cells) = all (== []) cells
+
+possibleMoves :: Tableau -> [Move]
+possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
+  [mkMoveFromColumnToCell tab coli celli | celli <- [0..2], coli <- [0..7]] ++
+  [mkMoveFromCellToColumn tab celli coli | celli <- [0..2], coli <- [0..7]] ++
+  [mkBuildFromColumn tab coli | coli <- [0..7]] ++
+  [mkBuildFromCell tab celli | celli <- [0..2]] ++
+  [mkPack tab fromi card toi | fromi <- [0..7], card <- lastCardsOfRuns (cols !! fromi), toi <- [0..7]] ++
+  [mkCollectDragons tab suit | suit <- suits]
 
 main :: IO ()
 main = do
