@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Foldable (asum)
 import Data.List ((\\), concatMap, elemIndices, foldl', intercalate, transpose)
 import Data.List.Split (chunksOf)
 import Data.Maybe (catMaybes, listToMaybe, mapMaybe, maybeToList)
@@ -333,8 +334,8 @@ takeCardFromCol cols i = (card, newCols)
     newCols = replaceIndex i newCol cols
 
 -- applys a player's move and automatically builds if possible
-applyMove :: Tableau -> Move -> Tableau
-applyMove t m = automaticBuild (applied t m)
+applyT :: Tableau -> Move -> Tableau
+applyT t m = automaticBuild (applied t m)
   where
     applied (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = Tableau newCells fl fo newCols
       where
@@ -371,6 +372,9 @@ applyMove t m = automaticBuild (applied t m)
         newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
         newcols = colsWithoutDragons cols suit
 
+applyM :: Game -> Move -> Game
+applyM g@(Game st moves) m = Game (applyT (current g) m) (moves ++ [m])
+
 highestRankAutomaticallyBuildable :: [Foundation] -> Rank
 highestRankAutomaticallyBuildable fos = minimum $ mapMaybe nextRankForFoundation fos
 
@@ -381,7 +385,8 @@ automaticallyBuildable fos card@(Suited suit rank) =
     (Just nextCard) -> card == nextCard && rank <= highestRankAutomaticallyBuildable fos
   where
     fo = foundationBySuit suit fos
-automaticallyBuildable _ _ = error "shouldn't be trying to build Flower/Dragon"
+automaticallyBuildable _ Flower = error "shouldn't be trying to build Flower"
+automaticallyBuildable _ (Dragon _) = error "shouldn't be trying to build Dragon"
 
 cardBuilt :: Tableau -> Move -> Card
 cardBuilt (Tableau _ _ _ cols) (BuildFromColumn coli) = head $ cols !! coli
@@ -396,10 +401,11 @@ automaticBuildMove tab@(Tableau _ _ fos _) =
 automaticBuild :: Tableau -> Tableau
 automaticBuild t = case automaticBuildMove t of
                    Nothing -> t
-                   (Just b) -> automaticBuild $ applyMove t b
+                   (Just b) -> automaticBuild $ applyT t b
 
-won :: Tableau -> Bool
-won (Tableau _ _ _ cells) = all (== []) cells
+won :: Game -> Bool
+won g = allColsFinished $ current g
+  where allColsFinished (Tableau _ _ _ cells) = all (== []) cells
 
 possibleMoves :: Tableau -> [Move]
 possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
@@ -412,16 +418,17 @@ possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
 
 
 data Game = Game Tableau [Move]
+  deriving (Show)
 
 
 game :: Tableau -> Game
 game t = Game t []
 
 current :: Game -> Tableau
-current (Game start moves) = foldl' applyMove start moves
+current (Game start moves) = foldl' applyT start moves
 
 previous :: Game -> [Tableau]
-previous (Game start moves) = scanl applyMove start moves
+previous (Game start moves) = scanl applyT start moves
 
 novelPossibleMoves :: Game -> [Move]
 novelPossibleMoves game = novel
@@ -429,15 +436,28 @@ novelPossibleMoves game = novel
     now = current game
     moves = possibleMoves now
     seen = previous game
-    possibleNexts = map (applyMove now) moves
+    possibleNexts = map (applyT now) moves
     paired = zip moves possibleNexts
     novel = map fst $ filter (\(_, tab) -> tab `notElem` seen) paired
 
 lost :: Game -> Bool
-lost game = not (won $ current game) && null (novelPossibleMoves game)
+lost game = not (won game) && null (novelPossibleMoves game)
 
+
+-- Nothing == Unwinnable, Just == Winnable
+type Outcome = Maybe Game
+
+outcome :: Game -> Outcome
+outcome g
+  | won g = Just g
+  | lost g = Nothing
+  | otherwise = asum $ map (outcome . applyM g) (novelPossibleMoves g)
 
 main :: IO ()
 main = do
   deal <- shuffleM standardDeck
-  print (tableau deal)
+  let st = tableau deal
+  print st
+  let g = game st
+  print (outcome g)
+

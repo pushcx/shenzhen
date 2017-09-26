@@ -40,9 +40,13 @@ Written for practice with Haskell and HaskellStack.
   - [x] Filter possible Moves against Game history to avoid loops
   - [ ] Take moves until game win/loss
   - [ ] QuickCheck that the number + distribution of cards in the game is constant
+  - [ ] Bug: `Prelude.head: empty list`
+  - [ ] Bug: `Exception: shouldn't be trying to build Flower`
+  - [ ] Bug: `Exception: Non-Suited card on Foundation`
 
 ## Cleanups and open questions:
 
+  - [ ] Never use `head` - maybe move to `classy-prelude`?
   - [ ] Organize code into modules, don't export constructors or the many unsafe utility functions for `Move`s
   - [ ] Silence `-Wincomplete-patterns` and `-Wincomplete-uni-patterns` on util funcitons
   - [ ] Encode that `Tableau` has exactly one `Foundation` per `Suit`
