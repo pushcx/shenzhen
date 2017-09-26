@@ -300,8 +300,6 @@ tableau deck = Tableau
              (map (\suit -> Foundation suit []) suits)
              (chunksOf 5 deck)
 
-testcol :: Column
-testcol = [Suited Bamboo One, Suited Dot Two, Suited Bamboo Three, Suited Dot Four, Flower, Suited Bamboo Five]
 standardDeck :: Deck
 standardDeck = Flower : concatMap suitcards suits
   where
@@ -334,41 +332,44 @@ takeCardFromCol cols i = (card, newCols)
     newCol = drop 1 fromCol
     newCols = replaceIndex i newCol cols
 
+-- applys a player's move and automatically builds if possible
 applyMove :: Tableau -> Move -> Tableau
-applyMove (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = Tableau newCells fl fo newCols
+applyMove t m = automaticBuild (applied t m)
   where
-    (card, newCols) = takeCardFromCol cols coli
-    newCell = Left (Cell (Just card))
-    newCells = replaceIndex celli newCell cells
-applyMove (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = Tableau newCells fl fo newCols
-  where
-    (card, newCells) = takeCardFromCell cells celli
-    oldCol = cols !! coli
-    newCol = card : oldCol
-    newCols = replaceIndex coli newCol cols
-applyMove (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs newCols
-  where
-    (card, newCols) = takeCardFromCol cols coli
-    newFs = buildCardToFoundations fo card
-applyMove (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
-  where
-    (card, newCells) = takeCardFromCell cells celli
-    newFs = buildCardToFoundations fo card
-applyMove (Tableau cells _ fos cols) (BuildFlower coli) = Tableau cells (Cell $ Just card) fos newCols
-  where
-    (card, newCols) = takeCardFromCol cols coli
-applyMove (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
-  where
-    fromCol = cols !! fromi
-    toCol = cols !! toi
-    run = unsafeTakeTo fromCol card
-    shortenedFromCol = drop (length run) fromCol
-    lengthenedToCol = run ++ toCol
-    newCols = replaceIndex fromi shortenedFromCol (replaceIndex toi lengthenedToCol cols)
-applyMove (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo newcols
-  where
-    newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
-    newcols = colsWithoutDragons cols suit
+    applied (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = Tableau newCells fl fo newCols
+      where
+        (card, newCols) = takeCardFromCol cols coli
+        newCell = Left (Cell (Just card))
+        newCells = replaceIndex celli newCell cells
+    applied (Tableau cells fl fo cols) (MoveFromCellToColumn celli coli) = Tableau newCells fl fo newCols
+      where
+        (card, newCells) = takeCardFromCell cells celli
+        oldCol = cols !! coli
+        newCol = card : oldCol
+        newCols = replaceIndex coli newCol cols
+    applied (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs newCols
+      where
+        (card, newCols) = takeCardFromCol cols coli
+        newFs = buildCardToFoundations fo card
+    applied (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
+      where
+        (card, newCells) = takeCardFromCell cells celli
+        newFs = buildCardToFoundations fo card
+    applied (Tableau cells _ fos cols) (BuildFlower coli) = Tableau cells (Cell $ Just card) fos newCols
+      where
+        (card, newCols) = takeCardFromCol cols coli
+    applied (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
+      where
+        fromCol = cols !! fromi
+        toCol = cols !! toi
+        run = unsafeTakeTo fromCol card
+        shortenedFromCol = drop (length run) fromCol
+        lengthenedToCol = run ++ toCol
+        newCols = replaceIndex fromi shortenedFromCol (replaceIndex toi lengthenedToCol cols)
+    applied (Tableau cells fl fo cols) (CollectDragons suit) = Tableau newcells fl fo newcols
+      where
+        newcells = addCollectedDragonsToCells (cellsWithoutDragons cells suit) suit
+        newcols = colsWithoutDragons cols suit
 
 highestRankAutomaticallyBuildable :: [Foundation] -> Rank
 highestRankAutomaticallyBuildable fos = minimum $ mapMaybe nextRankForFoundation fos
@@ -388,16 +389,14 @@ cardBuilt (Tableau cells _ _ _) (BuildFromCell celli) = (\(Left (Cell (Just card
 cardBuilt _ (BuildFlower _) = Flower
 cardBuilt _ _ = error "No card built for this move"
 
-automaticBuild :: Tableau -> Maybe Move
-automaticBuild tab@(Tableau _ _ fos _) =
+automaticBuildMove :: Tableau -> Maybe Move
+automaticBuildMove tab@(Tableau _ _ fos _) =
   listToMaybe $ filter (automaticallyBuildable fos . cardBuilt tab) $ maybeToList (mkBuildFlower tab) ++ (mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..7])
 
-move :: Tableau -> Move -> Tableau
-move tab m =
-  let newTab = applyMove tab m in
-    case automaticBuild newTab of
-    Nothing -> newTab
-    (Just build) -> move tab build
+automaticBuild :: Tableau -> Tableau
+automaticBuild t = case automaticBuildMove t of
+                   Nothing -> t
+                   (Just b) -> automaticBuild $ applyMove t b
 
 won :: Tableau -> Bool
 won (Tableau _ _ _ cells) = all (== []) cells
@@ -419,10 +418,10 @@ game :: Tableau -> Game
 game t = Game t []
 
 current :: Game -> Tableau
-current (Game start moves) = foldl' step start moves
+current (Game start moves) = foldl' applyMove start moves
 
 previous :: Game -> [Tableau]
-previous (Game start moves) = scanl step start moves
+previous (Game start moves) = scanl applyMove start moves
 
 novelPossibleMoves :: Game -> [Move]
 novelPossibleMoves game = novel
@@ -430,20 +429,13 @@ novelPossibleMoves game = novel
     now = current game
     moves = possibleMoves now
     seen = previous game
-    possibleNexts = map (step now) moves
+    possibleNexts = map (applyMove now) moves
     paired = zip moves possibleNexts
     novel = map fst $ filter (\(_, tab) -> tab `notElem` seen) paired
 
 lost :: Game -> Bool
 lost game = not (won $ current game) && null (novelPossibleMoves game)
 
--- After each player move there may be one or more automatic builds
-step :: Tableau -> Move -> Tableau
-step t m = case automaticBuild next of
-             Nothing -> next
-             (Just b) -> step next b
-  where
-    next = move t m
 
 main :: IO ()
 main = do
