@@ -46,11 +46,12 @@ type Deck = [Card]
 suitOf :: Card -> Suit
 suitOf (Suited s _) = s
 suitOf (Dragon s) = s
-suitOf _ = error "Flower doesn't have a suit"
+suitOf Flower = error "Flower doesn't have a suit"
 
 rankOf :: Card -> Rank
 rankOf (Suited _ r) = r
-rankOf _ = error "Flower and Dragon cards don't have a suit"
+rankOf (Dragon _) = error "Dragon doesn't have a rank"
+rankOf Flower = error "Flower doesn't have a rank"
 
 
 newtype Cell = Cell (Maybe Card)
