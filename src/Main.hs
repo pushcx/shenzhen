@@ -1,11 +1,19 @@
 module Main where
 
+import Debug.Trace
+import GHC.Stack (HasCallStack)
+
 import Data.Foldable (asum)
-import Data.List ((\\), concatMap, elemIndices, foldl', intercalate, transpose)
+import Data.List ((\\), concatMap, elemIndex, elemIndices, foldl', intercalate, transpose)
 import Data.List.Split (chunksOf)
-import Data.Maybe (catMaybes, listToMaybe, mapMaybe, maybeToList)
+import Data.Maybe (catMaybes, fromMaybe, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
+
+import Test.Hspec
+import Test.QuickCheck
+import Test.QuickCheck.Modifiers (NonEmptyList (..))
+
 
 data Suit = Bamboo | Character | Dot
   deriving (Eq)
@@ -106,15 +114,10 @@ mkRunTo col card =
       then Just possRun
       else Nothing
 
+-- returns the sublist up to and including the first instance of the target
+-- element
 mayTakeTo :: (Eq a) => [a] -> a -> Maybe [a]
-mayTakeTo [] _ = Nothing
-mayTakeTo collection target = halper (reverse collection) target
-  where
-    halper [] _ = Nothing
-    halper (c:cs) card =
-      if c == card
-      then Just (reverse (c:cs))
-      else halper cs card
+mayTakeTo list e = fmap (\i -> take (i + 1) list) (elemIndex e list)
 
 unsafeTakeTo :: (Eq a) => [a] -> a -> [a]
 unsafeTakeTo [] _ = error "element not in list, I warned you I was unsafe"
@@ -462,3 +465,35 @@ main = do
   let g = game st
   print (outcome g)
 
+
+
+instance Arbitrary Card where
+  arbitrary = elements standardDeck
+
+test :: IO ()
+test = hspec $ do
+  describe "headMay" $ do
+    it "returns the top card of the Column" $
+      headMay [Dragon Bamboo, Suited Dot Three] `shouldBe` Just (Dragon Bamboo)
+    it "is Nothing on an empty Column" $
+      headMay ([] :: Column) `shouldBe` Nothing
+
+  describe "mayTakeTo" $ do
+    it "takes up to desired card" $
+      mayTakeTo [Dragon Bamboo, Suited Dot Three] (Suited Dot Three) `shouldBe` Just [Dragon Bamboo, Suited Dot Three]
+    it "can take just one card" $
+      mayTakeTo [Dragon Bamboo, Suited Dot Three] (Dragon Bamboo) `shouldBe` Just [Dragon Bamboo]
+    it "is Nothing if card is not found" $
+      mayTakeTo [Dragon Bamboo, Suited Dot Three] (Dragon Dot) `shouldBe` Nothing
+    it "takes up until first if there are duplicates" $
+      mayTakeTo [Dragon Dot, Suited Dot Two, Dragon Dot] (Dragon Dot) `shouldBe` Just [Dragon Dot]
+    it "takes the correct amount of Cards" $
+      property $ \col c -> let m = mayTakeTo (col :: [Card]) (c :: Card) in
+                               fmap length m == fmap (+1) (elemIndex c col)
+    it "uses Nothing, not empty list, if card not found" $
+      property $ \col c -> let m = mayTakeTo (col :: [Card]) (c :: Card) in
+                               m /= Just []
+
+  describe "lastCardsOfRuns" $
+    it "finds no Runs in an empty list" $
+      lastCardsOfRuns [] `shouldBe` []
