@@ -120,11 +120,9 @@ mayTakeTo :: (Eq a) => [a] -> a -> Maybe [a]
 mayTakeTo list e = fmap (\i -> take (i + 1) list) (elemIndex e list)
 
 unsafeTakeTo :: (Eq a) => [a] -> a -> [a]
-unsafeTakeTo [] _ = error "element not in list, I warned you I was unsafe"
-unsafeTakeTo (c:cs) card =
-  if c == card
-  then reverse (c:cs)
-  else unsafeTakeTo cs card
+unsafeTakeTo list e = case mayTakeTo list e of
+                        Nothing -> error "element not in list, I warned you I was unsafe"
+                        (Just sublist) -> sublist
 
 validRunToCol :: Column -> Run -> Bool
 validRunToCol [] _ = True
