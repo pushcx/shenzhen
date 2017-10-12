@@ -156,6 +156,8 @@ instance Show Tableau where
     ++ " Fl: "  ++ show f
     ++ " -> "   ++ unwords (map show fs)
     ++ "\n"     ++ showcols cs
+numCols :: Int
+numCols = 7
 
 type ColumnIndex = Int
 type CellIndex = Int
@@ -240,7 +242,7 @@ mkBuildFromCell (Tableau cs _ foundations _) i = do
 
 mkBuildFlower :: Tableau -> Maybe Move
 mkBuildFlower (Tableau _ _ _ cols) =
-  listToMaybe $ mapMaybe mayFlower [0..7]
+  listToMaybe $ mapMaybe mayFlower [0..numCols]
   where
     mayFlower coli = do
       col <- maybeIndex cols coli
@@ -409,7 +411,7 @@ cardBuilt _ _ = error "No card built for this move"
 
 automaticBuildMove :: Tableau -> Maybe Move
 automaticBuildMove tab@(Tableau _ _ fos _) =
-  listToMaybe $ filter (automaticallyBuildable fos . cardBuilt tab) $ maybeToList (mkBuildFlower tab) ++ (mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..7])
+  listToMaybe $ filter (automaticallyBuildable fos . cardBuilt tab) $ maybeToList (mkBuildFlower tab) ++ (mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..numCols])
 
 automaticBuild :: Tableau -> Tableau
 automaticBuild t = case automaticBuildMove t of
@@ -422,11 +424,11 @@ won g = allColsFinished $ current g
 
 possibleMoves :: Tableau -> [Move]
 possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
-  [mkMoveFromColumnToCell tab coli celli | celli <- [0..2], coli <- [0..7]] ++
-  [mkMoveFromCellToColumn tab celli coli | celli <- [0..2], coli <- [0..7]] ++
-  [mkBuildFromColumn tab coli | coli <- [0..7]] ++
+  [mkMoveFromColumnToCell tab coli celli | celli <- [0..2], coli <- [0..numCols]] ++
+  [mkMoveFromCellToColumn tab celli coli | celli <- [0..2], coli <- [0..numCols]] ++
+  [mkBuildFromColumn tab coli | coli <- [0..numCols]] ++
   [mkBuildFromCell tab celli | celli <- [0..2]] ++
-  [mkPack tab fromi card toi | fromi <- [0..7], card <- lastCardsOfRuns (cols !! fromi), toi <- [0..7]] ++
+  [mkPack tab fromi card toi | fromi <- [0..numCols], card <- lastCardsOfRuns (cols !! fromi), toi <- [0..numCols]] ++
   [mkCollectDragons tab suit | suit <- suits]
 
 
