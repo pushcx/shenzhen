@@ -140,8 +140,10 @@ validRunToCol [] _ = True
 validRunToCol cs run = validRunPair (last run) (head cs)
 
 showcols :: [Column] -> String
-showcols cs = intercalate "\n" $ map (intercalate "  " . map show) (transpose $ map reverse cs)
-
+showcols cs = intercalate "\n" $ map (intercalate "  ") (transpose $ padShow cs)
+  where
+    longest = maximum $ map length cs
+    padShow = map (\col -> reverse $ replicate (longest - length col) "  " ++ map show col)
 newtype CollectedDragon = CollectedDragon Suit
   deriving (Show, Eq)
 
