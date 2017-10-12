@@ -223,7 +223,7 @@ mkMoveFromCellToColumn (Tableau cells _ _ cols) celli coli = do
 mkBuildFromColumn :: Tableau -> ColumnIndex -> Maybe Move
 mkBuildFromColumn (Tableau _ _ foundations cs) i = do
   col <- maybeIndex cs i
-  card <- topmost col
+  card@(Suited _ _) <- topmost col
   next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
   if card == next
   then return (BuildFromColumn i)
@@ -232,7 +232,7 @@ mkBuildFromColumn (Tableau _ _ foundations cs) i = do
 mkBuildFromCell :: Tableau -> CellIndex -> Maybe Move
 mkBuildFromCell (Tableau cs _ foundations _) i = do
   Left (Cell cell) <- maybeIndex cs i
-  card <- cell
+  card@(Suited _ _) <- cell
   next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
   if card == next
   then return (BuildFromCell i)
@@ -390,6 +390,7 @@ applyM g@(Game st moves) m = Game (applyT (current g) m) (moves ++ [m])
 highestRankAutomaticallyBuildable :: [Foundation] -> Rank
 highestRankAutomaticallyBuildable fos = minimum $ mapMaybe nextRankForFoundation fos
 
+-- can any of the Foundations take this card?
 automaticallyBuildable :: [Foundation] -> Card -> Bool
 automaticallyBuildable fos card@(Suited suit rank) =
   case nextCardForFoundation fo of
@@ -397,8 +398,8 @@ automaticallyBuildable fos card@(Suited suit rank) =
     (Just nextCard) -> card == nextCard && rank <= highestRankAutomaticallyBuildable fos
   where
     fo = foundationBySuit suit fos
-automaticallyBuildable _ Flower = error "shouldn't be trying to build Flower"
-automaticallyBuildable _ (Dragon _) = error "shouldn't be trying to build Dragon"
+automaticallyBuildable _ Flower = False
+automaticallyBuildable _ (Dragon _) = False
 
 cardBuilt :: Tableau -> Move -> Card
 cardBuilt (Tableau _ _ _ cols) (BuildFromColumn coli) = head $ cols !! coli

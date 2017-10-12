@@ -42,7 +42,7 @@ Written for practice with Haskell and HaskellStack.
   - [ ] QuickCheck that the number + distribution of cards in the game is constant
   - [x] Bug: `mayTakeTo` takes to last instance of a `Dragon`, not first
   - [ ] Bug: `Prelude.head: empty list`
-  - [ ] Bug: `Exception: shouldn't be trying to build Flower`
+  - [x] Bug: `Exception: shouldn't be trying to build Flower`
   - [ ] Bug: `Exception: Non-Suited card on Foundation`
   - [ ] Bug: `Exception: element not in list, I warned you I was unsafe`
   - [ ] `showcols` does not print empty space or `__` for empty columns so columns shift left
