@@ -74,6 +74,16 @@ instance Show Cell where
 data Foundation = Foundation Suit [Card]
   deriving (Eq)
 
+mkFoundation :: Suit -> Foundation
+mkFoundation s = Foundation s []
+
+buildOnFoundation :: Foundation -> Card -> Maybe Foundation
+buildOnFoundation f@(Foundation s cs) c = case nextCardForFoundation f of
+                                          Nothing -> Nothing
+                                          (Just n) -> if c == n
+                                                         then Just (Foundation s (c:cs))
+                                                         else Nothing
+
 instance Show Foundation where
   show (Foundation suit []) = "_" ++ show suit
   show (Foundation _    cs) = show . head $ reverse cs
@@ -162,9 +172,7 @@ nextRank Eight = Just Nine
 nextRank Nine  = Nothing
 
 nextRankForFoundation :: Foundation -> Maybe Rank
-nextRankForFoundation (Foundation _ (Suited _ r:_)) = nextRank r
-nextRankForFoundation (Foundation _ [])             = Just One
-nextRankForFoundation (Foundation _ _) = error "Non-Suited card on Foundation"
+nextRankForFoundation f = fmap rankOf (nextCardForFoundation f)
 
 nextCardForFoundation :: Foundation -> Maybe Card
 nextCardForFoundation (Foundation suit (Suited _ r:_)) = fmap (Suited suit) (nextRank r)
@@ -300,7 +308,7 @@ tableau :: Deck -> Tableau
 tableau deck = Tableau
              [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
              (Cell Nothing)
-             (map (\suit -> Foundation suit []) suits)
+             (map mkFoundation suits)
              (chunksOf 5 deck)
 
 standardDeck :: Deck
@@ -313,12 +321,14 @@ replaceIndex :: Int -> a -> [a] -> [a]
 replaceIndex i new list = take i list ++ new : drop (i + 1) list
 
 buildCardToFoundations :: [Foundation] -> Card -> [Foundation]
-buildCardToFoundations fo card = replaceIndex i (newF foundation) fo
+buildCardToFoundations fs card = replaceIndex i (newF foundation) fs
   where
     suit = suitOf card
-    foundation = foundationBySuit suit fo
-    i = head $ elemIndices foundation fo
-    newF (Foundation _ cards) = Foundation suit (card : cards)
+    foundation = foundationBySuit suit fs
+    i = head $ elemIndices foundation fs
+    newF f = case buildOnFoundation foundation card of
+               (Just nf) -> nf
+               Nothing -> error $ "Can't build " ++ show card ++ " to " ++ show f
 
 takeCardFromCell :: [DragonCell] -> Int -> (Card, [DragonCell])
 takeCardFromCell cells i = (card, newCells)
