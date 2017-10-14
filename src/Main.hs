@@ -4,7 +4,7 @@ import Debug.Trace
 import GHC.Stack (HasCallStack)
 
 import Data.Foldable (asum)
-import Data.List ((\\), concatMap, elemIndex, elemIndices, foldl', intercalate, transpose)
+import Data.List ((\\), concatMap, elemIndex, elemIndices, foldl', intercalate, sort, transpose)
 import Data.List.Split (chunksOf)
 import Data.Maybe (catMaybes, fromMaybe, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
@@ -16,7 +16,7 @@ import Test.QuickCheck.Modifiers (NonEmptyList (..))
 
 
 data Suit = Bamboo | Character | Dot
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 suits :: [Suit]
 suits = [Bamboo, Character, Dot]
@@ -43,13 +43,14 @@ instance Show Rank where
 
 
 data Card = Flower | Suited Suit Rank | Dragon Suit
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 instance Show Card where
   show Flower             = "Fl"
   show (Dragon suit)      = "D" ++ show suit
   show (Suited suit rank) = show rank ++ show suit
-type Deck = [Card]
+newtype Deck = Deck [Card]
+  deriving (Eq, Show)
 
 suitOf :: Card -> Suit
 suitOf (Suited s _) = s
@@ -309,17 +310,20 @@ colsWithoutDragons :: [Column] -> Suit -> [Column]
 colsWithoutDragons cells suit = map (`colWithoutDragons` suit) cells
 
 tableau :: Deck -> Tableau
-tableau deck = Tableau
-             [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
-             (Cell Nothing)
-             (map mkFoundation suits)
-             (chunksOf 5 deck)
+tableau (Deck deck) = Tableau
+                      [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
+                      (Cell Nothing)
+                      (map mkFoundation suits)
+                      (chunksOf 5 deck)
 
-standardDeck :: Deck
-standardDeck = Flower : concatMap suitcards suits
+standardCards :: [Card]
+standardCards = sort $ Flower : concatMap suitcards suits
   where
     suitcards suit = replicate 4 (Dragon suit) ++ map (Suited suit)
                     [One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
+
+standardDeck :: Deck
+standardDeck = Deck standardCards
 
 replaceIndex :: Int -> a -> [a] -> [a]
 replaceIndex i new list = take i list ++ new : drop (i + 1) list
@@ -470,18 +474,32 @@ outcome g
   | lost g = Nothing
   | otherwise = asum $ map (outcome . applyM g) (novelPossibleMoves g)
 
+deal :: Deck -> IO Deck
+deal (Deck d) = do
+  cs <- shuffleM d
+  return $ Deck cs
+
 main :: IO ()
 main = do
-  deal <- shuffleM standardDeck
-  let st = tableau deal
+  d <- deal standardDeck
+  let st = tableau d
   print st
   let g = game st
   print (outcome g)
 
-
+cards :: Deck -> [Card]
+cards (Deck cs) = cs
 
 instance Arbitrary Card where
-  arbitrary = elements standardDeck
+  arbitrary = elements $ cards standardDeck
+
+instance Arbitrary Deck where
+  arbitrary = do
+    cs <- shuffle (cards standardDeck)
+    return $ Deck cs
+
+-- arbitraryTableau :: Gen Tableau
+
 
 test :: IO ()
 test = hspec $ do
@@ -510,3 +528,7 @@ test = hspec $ do
   describe "lastCardsOfRuns" $
     it "finds no Runs in an empty list" $
       lastCardsOfRuns [] `shouldBe` []
+
+  describe "deal" $
+    it "has the same 40 cards as the starting deck" $
+      property $ \(Deck cs) -> sort cs == standardCards
