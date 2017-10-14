@@ -498,7 +498,10 @@ instance Arbitrary Deck where
     cs <- shuffle (cards standardDeck)
     return $ Deck cs
 
--- arbitraryTableau :: Gen Tableau
+instance Arbitrary Tableau where
+  arbitrary = do
+    deck <- arbitrary
+    return $ tableau deck
 
 
 test :: IO ()
