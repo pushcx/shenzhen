@@ -431,12 +431,12 @@ won g = allColsFinished $ current g
 
 possibleMoves :: Tableau -> [Move]
 possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
-  [mkMoveFromColumnToCell tab coli celli | celli <- [0..2], coli <- [0..numCols]] ++
-  [mkMoveFromCellToColumn tab celli coli | celli <- [0..2], coli <- [0..numCols]] ++
+  [mkCollectDragons tab suit | suit <- suits] ++
   [mkBuildFromColumn tab coli | coli <- [0..numCols]] ++
   [mkBuildFromCell tab celli | celli <- [0..2]] ++
   [mkPack tab fromi card toi | fromi <- [0..numCols], card <- lastCardsOfRuns (cols !! fromi), toi <- [0..numCols]] ++
-  [mkCollectDragons tab suit | suit <- suits]
+  [mkMoveFromCellToColumn tab celli coli | celli <- [0..2], coli <- [0..numCols]] ++
+  [mkMoveFromColumnToCell tab coli celli | celli <- [0..2], coli <- [0..numCols]]
 
 
 -- moves are oldest-first
