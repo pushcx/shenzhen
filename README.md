@@ -41,11 +41,14 @@ Written for practice with Haskell and HaskellStack.
   - [ ] Take moves until game win/loss
   - [ ] QuickCheck that the number + distribution of cards in the game is constant
   - [x] Bug: `mayTakeTo` takes to last instance of a `Dragon`, not first
-  - [ ] Bug: `Prelude.head: empty list`
+  - [x] Bug: `Prelude.head: empty list`
   - [x] Bug: `Exception: shouldn't be trying to build Flower`
+  - [ ] Bug: Solver puts `Flower` onto `DragonCell`. `mkFromColumnToCell` shouldn't allow AND automatic builder should've built it
   - [ ] Bug: `Exception: Non-Suited card on Foundation`
   - [ ] Bug: `Exception: element not in list, I warned you I was unsafe`
   - [x] `showcols` does not print empty space or `__` for empty columns so columns shift left
+  - [ ] `[DragonCell]` should be a type that exposes only one empty cell at a time, cut down on solution space
+  - [ ] Some kind of memoization to avoid solver re-attempting from known-losing positions
 
 ## Cleanups and open questions:
 

@@ -394,7 +394,7 @@ applyT t m = automaticBuild (applied t m)
         newcols = colsWithoutDragons cols suit
 
 applyM :: Game -> Move -> Game
-applyM g@(Game st moves) m = Game (applyT (current g) m) (moves ++ [m])
+applyM (Game st moves) m = Game st (moves ++ [m])
 
 highestRankAutomaticallyBuildable :: [Foundation] -> Rank
 highestRankAutomaticallyBuildable fos = minimum $ mapMaybe nextRankForFoundation fos
@@ -439,6 +439,7 @@ possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
   [mkCollectDragons tab suit | suit <- suits]
 
 
+-- moves are oldest-first
 data Game = Game Tableau [Move]
   deriving (Show)
 
