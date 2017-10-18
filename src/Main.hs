@@ -49,6 +49,7 @@ instance Show Card where
   show Flower             = "Fl"
   show (Dragon suit)      = "D" ++ show suit
   show (Suited suit rank) = show rank ++ show suit
+
 newtype Deck = Deck [Card]
   deriving (Eq, Show)
 
@@ -503,6 +504,34 @@ instance Arbitrary Tableau where
     deck <- arbitrary
     return $ tableau deck
 
+instance Arbitrary Game where
+  arbitrary = do
+    tab <- arbitrary
+    return $ game tab
+
+newtype TableauMove = TableauMove (Tableau, Move)
+  deriving (Show)
+
+instance Arbitrary TableauMove where
+  arbitrary = do
+    t <- arbitrary
+    m <- elements $ possibleMoves t
+    return $ TableauMove (t, m)
+
+tabCards :: Tableau -> [Card]
+tabCards (Tableau cells fl fo cols) =
+  concatMap cellCard cells ++ flowerCard fl ++ concatMap foundationCards fo ++ concat cols
+  where
+    cellCard (Right (CollectedDragon suit)) = replicate 4 (Dragon suit)
+    cellCard (Left (Cell (Just card))) = [card]
+    cellCard (Left (Cell Nothing)) = []
+    flowerCard (Cell (Just Flower)) = [Flower]
+    flowerCard (Cell (Just _)) = error "non-flower on flower cell"
+    flowerCard (Cell Nothing) = []
+    foundationCards (Foundation _ cs) = cs
+
+prop_standardCards :: [Card] -> Bool
+prop_standardCards cs = sort cs == standardCards
 
 test :: IO ()
 test = hspec $ do
@@ -532,6 +561,12 @@ test = hspec $ do
     it "finds no Runs in an empty list" $
       lastCardsOfRuns [] `shouldBe` []
 
-  describe "deal" $
+  describe "prop_standardCards" $
     it "has the same 40 cards as the starting deck" $
-      property $ \(Deck cs) -> sort cs == standardCards
+      property $ \(Deck cs) -> prop_standardCards cs
+
+  describe "new games" $ do
+    it "has the same 40 cards as the starting deck" $
+      property $ \t -> prop_standardCards $ tabCards t
+    it "always has the standard deck after a move" $
+      property $ \(TableauMove (t, m) ) -> prop_standardCards $ tabCards (applyT t m)
