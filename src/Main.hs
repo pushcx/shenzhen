@@ -472,9 +472,10 @@ type Outcome = Maybe Game
 
 outcome :: Game -> Outcome
 outcome g
+  | not $ prop_standardCards (tabCards $ current g) = error ("lost/extra cards! \n" ++ show (current g))
   | won g = Just g
   | lost g = Nothing
-  | otherwise = asum $ map (outcome . applyM g) (novelPossibleMoves g)
+  | otherwise = trace ("\n" ++ (show $ current g)) $ asum $ map (outcome . applyM g) (novelPossibleMoves g)
 
 deal :: Deck -> IO Deck
 deal (Deck d) = do
