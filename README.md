@@ -52,6 +52,7 @@ Written for practice with Haskell and HaskellStack.
 
 ## Cleanups and open questions:
 
+  - [ ] Solver should filter to only pack to leftmost empty column
   - [ ] Never use `head` - maybe move to `classy-prelude`?
   - [ ] Organize code into modules, don't export constructors or the many unsafe utility functions for `Move`s
   - [ ] Silence `-Wincomplete-patterns` and `-Wincomplete-uni-patterns` on util funcitons

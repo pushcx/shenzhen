@@ -88,7 +88,7 @@ buildOnFoundation f@(Foundation s cs) c = case nextCardForFoundation f of
 
 instance Show Foundation where
   show (Foundation suit []) = "_" ++ show suit
-  show (Foundation _    cs) = show . head $ reverse cs
+  show (Foundation _    cs) = show $ head cs
 
 
 -- A vertical stack of cards. Stored topmost-first.
