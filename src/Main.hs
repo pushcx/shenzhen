@@ -210,23 +210,27 @@ data Move =
 mkMoveFromColumnToCell :: Tableau -> ColumnIndex -> CellIndex -> Maybe Move
 mkMoveFromColumnToCell (Tableau cells _ _ cols) coli celli = do
   col <- maybeIndex cols coli
-  _ <- topmost col -- only care that there is a card, not what it is
-  case maybeIndex cells celli of
-    Nothing -> Nothing
-    (Just (Right _)) -> Nothing
-    (Just (Left (Cell Nothing))) -> Just (MoveFromColumnToCell coli celli)
-    _ -> Nothing
+  card <- topmost col
+  case card of
+    Flower -> Nothing
+    _ -> case maybeIndex cells celli of
+           Nothing -> Nothing
+           (Just (Right _)) -> Nothing
+           (Just (Left (Cell Nothing))) -> Just (MoveFromColumnToCell coli celli)
+           _ -> Nothing
 
 mkMoveFromCellToColumn :: Tableau -> CellIndex -> ColumnIndex -> Maybe Move
 mkMoveFromCellToColumn (Tableau cells _ _ cols) celli coli = do
   Left (Cell cell) <- maybeIndex cells celli
   card <- cell
   col <- maybeIndex cols coli
-  case col of
-    []    -> Just (MoveFromCellToColumn celli coli)
-    (c:_) -> if validRunPair card c
-                then Just (MoveFromCellToColumn celli coli)
-                else Nothing
+  case card of
+    Flower -> Nothing
+    _ -> case col of
+           []    -> Just (MoveFromCellToColumn celli coli)
+           (c:_) -> if validRunPair card c
+                       then Just (MoveFromCellToColumn celli coli)
+                       else Nothing
 
 mkBuildFromColumn :: Tableau -> ColumnIndex -> Maybe Move
 mkBuildFromColumn (Tableau _ _ foundations cs) i = do
@@ -256,6 +260,7 @@ mkBuildFlower (Tableau _ _ _ cols) =
       Just (BuildFlower coli)
 
 mkPack :: Tableau -> ColumnIndex -> Card -> ColumnIndex -> Maybe Move
+mkPack _ _ Flower _ = Nothing
 mkPack (Tableau _ _ _ cs) from card to = do
   fromCol <- maybeIndex cs from
   run <- mkRunTo fromCol card
