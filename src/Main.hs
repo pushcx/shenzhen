@@ -160,7 +160,7 @@ instance Show Tableau where
     ++ " Fl: "  ++ show f
     ++ " -> "   ++ unwords (map show fs)
     ++ "\n"     ++ sc
-    ++ replicate (8 - length (lines sc)) '\n'
+    ++ replicate (9 - length (lines sc)) '\n'
       where sc = showcols cs
 numCols :: Int
 numCols = 7
@@ -441,7 +441,7 @@ possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
   [mkCollectDragons tab suit | suit <- suits] ++
   [mkBuildFromColumn tab coli | coli <- [0..numCols]] ++
   [mkBuildFromCell tab celli | celli <- [0..2]] ++
-  [mkPack tab fromi card toi | fromi <- [0..numCols], card <- lastCardsOfRuns (cols !! fromi), toi <- [0..numCols]] ++
+  [mkPack tab fromi card toi | fromi <- [0..numCols], card <- reverse $ lastCardsOfRuns (cols !! fromi), toi <- [0..numCols]] ++
   [mkMoveFromCellToColumn tab celli coli | celli <- [0..2], coli <- [0..numCols]] ++
   [mkMoveFromColumnToCell tab coli celli | celli <- [0..2], coli <- [0..numCols]]
 
@@ -479,7 +479,7 @@ type Outcome = Maybe Game
 
 outcome :: Game -> Outcome
 outcome g
-  | not $ prop_standardCards (tabCards $ current g) = error ("lost/extra cards! \n" ++ show (current g))
+--  | not $ prop_standardCards (tabCards $ current g) = error ("lost/extra cards! \n" ++ show (current g))
   | won g = Just g
   | lost g = Nothing
   | otherwise = trace ("\n" ++ (show $ current g)) $ asum $ map (outcome . applyM g) (novelPossibleMoves g)
