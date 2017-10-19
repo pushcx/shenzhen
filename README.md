@@ -43,8 +43,8 @@ Written for practice with Haskell and HaskellStack.
   - [x] Bug: `mayTakeTo` takes to last instance of a `Dragon`, not first
   - [x] Bug: `Prelude.head: empty list`
   - [x] Bug: `Exception: shouldn't be trying to build Flower`
-  - [ ] Bug: automatic building isn't always building the `Flower`
-  - [ ] `Move` smart constructors shoule error on `Flower`
+  - [x] Bug: automatic building isn't always building the `Flower`
+  - [ ] `Move` smart constructors should error on `Flower`
   - [ ] Bug: `Exception: Non-Suited card on Foundation`
   - [ ] Bug: `Exception: element not in list, I warned you I was unsafe`
   - [x] `showcols` does not print empty space or `__` for empty columns so columns shift left

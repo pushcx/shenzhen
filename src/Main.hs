@@ -160,7 +160,7 @@ instance Show Tableau where
     ++ " Fl: "  ++ show f
     ++ " -> "   ++ unwords (map show fs)
     ++ "\n"     ++ sc
-    ++ replicate (9 - length (lines sc)) '\n'
+    ++ replicate (12 - length (lines sc)) '\n'
       where sc = showcols cs
 numCols :: Int
 numCols = 7
@@ -205,7 +205,7 @@ data Move =
   | BuildFlower ColumnIndex
   | Pack ColumnIndex Card ColumnIndex
   | CollectDragons Suit
-  deriving (Show)
+  deriving (Eq, Show)
 
 mkMoveFromColumnToCell :: Tableau -> ColumnIndex -> CellIndex -> Maybe Move
 mkMoveFromColumnToCell (Tableau cells _ _ cols) coli celli = do
@@ -257,7 +257,7 @@ mkBuildFlower (Tableau _ _ _ cols) =
     mayFlower coli = do
       col <- maybeIndex cols coli
       Flower <- topmost col
-      Just (BuildFlower coli)
+      return (BuildFlower coli)
 
 mkPack :: Tableau -> ColumnIndex -> Card -> ColumnIndex -> Maybe Move
 mkPack _ _ Flower _ = Nothing
@@ -406,26 +406,28 @@ applyM (Game st moves) m = Game st (moves ++ [m])
 highestRankAutomaticallyBuildable :: [Foundation] -> Rank
 highestRankAutomaticallyBuildable fos = minimum $ mapMaybe nextRankForFoundation fos
 
--- can any of the Foundations take this card?
-automaticallyBuildable :: [Foundation] -> Card -> Bool
-automaticallyBuildable fos card@(Suited suit rank) =
+automaticallyBuildable :: Tableau -> Move -> Bool
+automaticallyBuildable _ MoveFromColumnToCell{} = False
+automaticallyBuildable _ MoveFromCellToColumn{} = False
+automaticallyBuildable _ BuildFlower{} = True
+automaticallyBuildable _ Pack{} = False
+automaticallyBuildable _ CollectDragons{} = False
+automaticallyBuildable (Tableau _ _ fos cols) (BuildFromColumn coli) =
+  buildable fos (head $ cols !! coli)
+automaticallyBuildable (Tableau cells _ fos _) (BuildFromCell celli) =
+  buildable fos $ (\(Left (Cell (Just card))) -> card) $ cells !! celli
+
+buildable :: [Foundation] -> Card -> Bool
+buildable fos card@(Suited suit rank) =
   case nextCardForFoundation fo of
     Nothing -> False
     (Just nextCard) -> card == nextCard && rank <= highestRankAutomaticallyBuildable fos
   where
     fo = foundationBySuit suit fos
-automaticallyBuildable _ Flower = False
-automaticallyBuildable _ (Dragon _) = False
-
-cardBuilt :: Tableau -> Move -> Card
-cardBuilt (Tableau _ _ _ cols) (BuildFromColumn coli) = head $ cols !! coli
-cardBuilt (Tableau cells _ _ _) (BuildFromCell celli) = (\(Left (Cell (Just card))) -> card) $ cells !! celli
-cardBuilt _ (BuildFlower _) = Flower
-cardBuilt _ _ = error "No card built for this move"
 
 automaticBuildMove :: Tableau -> Maybe Move
-automaticBuildMove tab@(Tableau _ _ fos _) =
-  listToMaybe $ filter (automaticallyBuildable fos . cardBuilt tab) $ maybeToList (mkBuildFlower tab) ++ (mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..numCols])
+automaticBuildMove tab =
+  listToMaybe $ filter (automaticallyBuildable tab) $ maybeToList (mkBuildFlower tab) ++ (mapMaybe (mkBuildFromCell tab) [0..2] ++ mapMaybe (mkBuildFromColumn tab) [0..numCols])
 
 automaticBuild :: Tableau -> Tableau
 automaticBuild t = case automaticBuildMove t of
@@ -579,3 +581,11 @@ test = hspec $ do
       property $ \t -> prop_standardCards $ tabCards t
     it "always has the standard deck after a move" $
       property $ \(TableauMove (t, m) ) -> prop_standardCards $ tabCards (applyT t m)
+
+  describe "mkBuildFromColumn" $
+    it "will build Flowers" $
+      mkBuildFlower (tableau (Deck [Flower])) `shouldBe` Just (BuildFlower 0)
+
+  describe "automaticBuildMove" $
+    it "can build Flowers" $
+      automaticBuildMove (tableau (Deck [Flower])) `shouldBe` Just (BuildFlower 0)
