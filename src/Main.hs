@@ -159,7 +159,9 @@ instance Show Tableau where
        "C: " ++ unwords (map show cells)
     ++ " Fl: "  ++ show f
     ++ " -> "   ++ unwords (map show fs)
-    ++ "\n"     ++ showcols cs
+    ++ "\n"     ++ sc
+    ++ replicate (8 - length (lines sc)) '\n'
+      where sc = showcols cs
 numCols :: Int
 numCols = 7
 
