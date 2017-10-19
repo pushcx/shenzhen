@@ -152,6 +152,10 @@ newtype CollectedDragon = CollectedDragon Suit
 
 type DragonCell = Either Cell CollectedDragon
 
+-- instance Show DragonCell where
+--   show (Left c) = show c
+--   show (Right (CollectedDragon s)) = "!" ++ show s
+
 data Tableau = Tableau [DragonCell] FlowerCell [Foundation] [Column]
   deriving (Eq)
 instance Show Tableau where
