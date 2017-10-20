@@ -6,6 +6,7 @@ import GHC.Stack (HasCallStack)
 import Data.Foldable (asum)
 import Data.List ((\\), concatMap, elemIndex, elemIndices, foldl', intercalate, sort, transpose)
 import Data.List.Split (chunksOf)
+import qualified Data.Set as Set
 import Data.Maybe (catMaybes, fromMaybe, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
@@ -65,7 +66,7 @@ rankOf Flower = error "Flower doesn't have a rank"
 
 
 newtype Cell = Cell (Maybe Card)
-  deriving (Eq)
+  deriving (Eq, Ord)
 type FlowerCell = Cell
 
 instance Show Cell where
@@ -74,7 +75,7 @@ instance Show Cell where
 
 
 data Foundation = Foundation Suit [Card]
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 mkFoundation :: Suit -> Foundation
 mkFoundation s = Foundation s []
@@ -147,7 +148,7 @@ showcols cs = intercalate "\n" $ map (intercalate "  ") (transpose $ padShow cs)
     longest = maximum $ map length cs
     padShow = map (\col -> reverse $ replicate (longest - length col) "  " ++ map show col)
 newtype CollectedDragon = CollectedDragon Suit
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show)
 
 
 type DragonCell = Either Cell CollectedDragon
@@ -157,7 +158,7 @@ type DragonCell = Either Cell CollectedDragon
 --   show (Right (CollectedDragon s)) = "!" ++ show s
 
 data Tableau = Tableau [DragonCell] FlowerCell [Foundation] [Column]
-  deriving (Eq)
+  deriving (Eq, Ord)
 instance Show Tableau where
   show (Tableau cells f fs cs) =
        "C: " ++ unwords (map show cells)

@@ -38,7 +38,7 @@ Written for practice with Haskell and HaskellStack.
   - [x] Detect game loss
   - [x] Generate list of possible Moves for a position
   - [x] Filter possible Moves against Game history to avoid loops
-  - [ ] solver loops infinitely at losing states
+  - [ ] Bug: solver loops infinitely at losing states
   - [ ] Take moves until game win/loss
   - [x] QuickCheck that the number + distribution of cards in the game is constant
   - [x] Bug: `mayTakeTo` takes to last instance of a `Dragon`, not first

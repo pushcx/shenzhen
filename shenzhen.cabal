@@ -15,6 +15,7 @@ extra-source-files:  README.md
 
 executable shenzhen
   build-depends:       base >= 4.9 && < 5
+                     , containers
                      , hspec
                      , QuickCheck
                      , random-shuffle
