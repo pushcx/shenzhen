@@ -266,13 +266,14 @@ mkBuildFlower (Tableau _ _ _ cols) =
 
 mkPack :: Tableau -> ColumnIndex -> Card -> ColumnIndex -> Maybe Move
 mkPack _ _ Flower _ = Nothing
-mkPack (Tableau _ _ _ cs) from card to = do
-  fromCol <- maybeIndex cs from
-  run <- mkRunTo fromCol card
-  toCol <- maybeIndex cs to
-  if validRunToCol toCol run
-  then Just (Pack from card to)
-  else Nothing
+mkPack (Tableau _ _ _ cs) from card to =
+  if from == to then Nothing else do
+    fromCol <- maybeIndex cs from
+    run <- mkRunTo fromCol card
+    toCol <- maybeIndex cs to
+    if validRunToCol toCol run
+    then Just (Pack from card to)
+    else Nothing
 
 mkCollectDragons :: Tableau -> Suit -> Maybe Move
 mkCollectDragons t s =
