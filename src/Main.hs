@@ -6,6 +6,7 @@ import GHC.Stack (HasCallStack)
 import Data.Foldable (asum)
 import Data.List ((\\), concatMap, elemIndex, elemIndices, foldl', intercalate, sort, transpose)
 import Data.List.Split (chunksOf)
+import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Maybe (catMaybes, fromMaybe, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
@@ -457,6 +458,10 @@ possibleMoves tab@(Tableau _ _ _ cols) = catMaybes $
 -- moves are oldest-first
 data Game = Game Tableau [Move]
   deriving (Show)
+-- instance Show Game where
+--   show (Game t ms) = (show length ms) ++ " " ++ show t ++ "\n" ++ ms
+
+moveCount (Game _ ms) = length ms
 
 
 game :: Tableau -> Game
@@ -468,29 +473,77 @@ current (Game start moves) = foldl' applyT start moves
 previous :: Game -> [Tableau]
 previous (Game start moves) = scanl applyT start moves
 
-novelPossibleMoves :: Game -> [Move]
-novelPossibleMoves game = novel
+-- novelPossibleMoves :: Losses -> Game -> [Move]
+-- novelPossibleMoves losses game = novel
+--   where
+--     now = current game
+--     moves = possibleMoves now
+--     seen = previous game
+--     possibleNexts = map (applyT now) moves
+--     paired = zip moves possibleNexts
+--     novel = map fst $ filter (\(_, tab) -> tab `Set.notMember` losses && tab `notElem` seen) pair
+
+-- lost :: Losses -> Game -> Bool
+-- lost losses g = not (won g) && null (novelPossibleMoves losses g)
+
+type Losses = Set.Set Tableau
+
+data Outcome = Unknown | Lost | Won
+type Results = Map.Map Tableau Outcome
+
+outcome :: Game -> Maybe Game
+outcome = undefined
+
+
+--outcomes :: Either Losses Game -> Game -> Either Losses Game
+--outcomes (Right g) _ = Right g
+--outcomes (Left l) g
+--  | trace (show (current g)) won g = Right g
+--  | lost l g = Left $ Set.insert (current g) l
+--  | otherwise = run l g
+
+outcomes :: Losses -> Game -> Either Losses (Game, Losses)
+outcomes ls g
+  | won g = Right (g, ls)
+  | otherwise = bar ls moves
   where
-    now = current game
-    moves = possibleMoves now
-    seen = previous game
-    possibleNexts = map (applyT now) moves
-    paired = zip moves possibleNexts
-    novel = map fst $ filter (\(_, tab) -> tab `notElem` seen) paired
+    seen = previous g -- [Tableau]
+    now = last seen
+    moves = possibleMoves (trace (show (moveCount g) ++ " " ++ show now) now)
+    foo :: Losses -> Tableau -> Bool
+    foo ls' tab = tab `Set.notMember` ls' && tab `notElem` seen
+    bar :: Losses -> [Move] -> Either Losses (Game, Losses)
+    bar ls' [] = Left ls'
+    bar ls' (m:ms) = if foo ls' next
+                    then case outcomes ls' (applyM g m) of
+                           Left ls'' -> bar (Set.insert next ls'') ms
+                           Right (g', ls'') -> Right (g', ls'')
+                    else bar ls' ms
+                      where
+                        next = applyT now m
 
-lost :: Game -> Bool
-lost game = not (won game) && null (novelPossibleMoves game)
+-- outcomes (Right g) _ = Right g
+-- outcomes (Left ls) g
+--   | trace (show (current g)) won g = Right g
+--   | lost ls g = Left $ Set.insert (current g) ls
+--   | otherwise = Left ls
+
+-- run :: Losses -> Game -> Either Losses Game
+-- run l g = foldl' outcomes (Left l) (map (applyM g) $ novelPossibleMoves l g)
+
+-- run :: Losses -> Game -> Either Losses Game
+-- run ls g = case outcomes ls g of
+--              Right _ -> Right g
+--              Left ls' -> if lost ls' g
+--                             then Left ls'
+--                             else run ls' g
 
 
--- Nothing == Unwinnable, Just == Winnable
-type Outcome = Maybe Game
-
-outcome :: Game -> Outcome
-outcome g
---  | not $ prop_standardCards (tabCards $ current g) = error ("lost/extra cards! \n" ++ show (current g))
-  | won g = Just g
-  | lost g = Nothing
-  | otherwise = trace ("\n" ++ (show $ current g)) $ asum $ map (outcome . applyM g) (novelPossibleMoves g)
+--outcome g
+----  | not $ prop_standardCards (tabCards $ current g) = error ("lost/extra cards! \n" ++ show (current g))
+-- | won g = Just g
+-- | lost g = Nothing
+-- | otherwise = trace ("\n" ++ (show $ current g)) $ asum $ map (outcome . applyM g) (novelPossibleMoves g)
 
 deal :: Deck -> IO Deck
 deal (Deck d) = do
@@ -503,7 +556,9 @@ main = do
   let st = tableau d
   print st
   let g = game st
-  print (outcome g)
+  case outcomes Set.empty g of
+    (Right (Game t ms, l)) -> putStrLn ( show t ++ show ms ++ "\nmoves: " ++ show (length ms) ++ " + losses: " ++ show (length l))
+    (Left losses) -> putStrLn $ "lost " ++ show (length losses)
 
 cards :: Deck -> [Card]
 cards (Deck cs) = cs

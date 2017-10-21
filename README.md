@@ -20,7 +20,7 @@ Written for practice with Haskell and HaskellStack.
   - [x] custom Show instances for Card, Layout
   - [ ] enter game Layout
   - [x] shuffle deck to create Layout
-  - [ ] Game type
+  - [x] Game type
   - [x] Use [standard terms](https://en.wikipedia.org/wiki/Glossary_of_patience_terms)
   - [x] Move type for card moves, collecting dragons
   - [x] `move :: Game -> Move -> Game`
