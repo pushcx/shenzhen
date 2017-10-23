@@ -45,7 +45,7 @@ Written for practice with Haskell and HaskellStack.
   - [x] Bug: `Prelude.head: empty list`
   - [x] Bug: `Exception: shouldn't be trying to build Flower`
   - [x] Bug: automatic building isn't always building the `Flower`
-  - [ ] `Move` smart constructors should error on `Flower`
+  - [x] `Move` smart constructors should error on `Flower`
   - [x] Bug: `Exception: Non-Suited card on Foundation`
   - [x] Bug: `Exception: element not in list, I warned you I was unsafe`
   - [x] `showcols` does not print empty space or `__` for empty columns so columns shift left
