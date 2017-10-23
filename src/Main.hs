@@ -476,34 +476,7 @@ current (Game start moves) = foldl' applyT start moves
 previous :: Game -> [Tableau]
 previous (Game start moves) = scanl applyT start moves
 
--- novelPossibleMoves :: Losses -> Game -> [Move]
--- novelPossibleMoves losses game = novel
---   where
---     now = current game
---     moves = possibleMoves now
---     seen = previous game
---     possibleNexts = map (applyT now) moves
---     paired = zip moves possibleNexts
---     novel = map fst $ filter (\(_, tab) -> tab `Set.notMember` losses && tab `notElem` seen) pair
-
--- lost :: Losses -> Game -> Bool
--- lost losses g = not (won g) && null (novelPossibleMoves losses g)
-
 type Losses = Set.Set Tableau
-
-data Outcome = Unknown | Lost | Won
-type Results = Map.Map Tableau Outcome
-
-outcome :: Game -> Maybe Game
-outcome = undefined
-
-
---outcomes :: Either Losses Game -> Game -> Either Losses Game
---outcomes (Right g) _ = Right g
---outcomes (Left l) g
---  | trace (show (current g)) won g = Right g
---  | lost l g = Left $ Set.insert (current g) l
---  | otherwise = run l g
 
 outcomes :: Losses -> Game -> Either Losses (Game, Losses)
 outcomes ls g
@@ -512,41 +485,17 @@ outcomes ls g
   where
     seen = previous g
     now = last seen
-    moves = possibleMoves (trace (show (moveCount g) ++ " " ++ show now) now)
-    notLost :: Losses -> Tableau -> Bool
+    moves = possibleMoves (trace ("depth " ++ show (moveCount g) ++ " losses " ++ show (length ls) ++ "\n" ++ show now) now)
     notLost ls' tab = tab `Set.notMember` ls' && tab `notElem` seen
     evaluate :: Losses -> [Move] -> Either Losses (Game, Losses)
     evaluate ls' [] = Left ls'
     evaluate ls' (m:ms) = if notLost ls' next
-                    then case outcomes ls' (applyM g m) of
-                           Left ls'' -> evaluate (Set.insert next ls'') ms
-                           Right (g', ls'') -> Right (g', ls'')
-                    else evaluate ls' ms
-                      where
-                        next = applyT now m
-
--- outcomes (Right g) _ = Right g
--- outcomes (Left ls) g
---   | trace (show (current g)) won g = Right g
---   | lost ls g = Left $ Set.insert (current g) ls
---   | otherwise = Left ls
-
--- run :: Losses -> Game -> Either Losses Game
--- run l g = foldl' outcomes (Left l) (map (applyM g) $ novelPossibleMoves l g)
-
--- run :: Losses -> Game -> Either Losses Game
--- run ls g = case outcomes ls g of
---              Right _ -> Right g
---              Left ls' -> if lost ls' g
---                             then Left ls'
---                             else run ls' g
-
-
---outcome g
-----  | not $ prop_standardCards (tabCards $ current g) = error ("lost/extra cards! \n" ++ show (current g))
--- | won g = Just g
--- | lost g = Nothing
--- | otherwise = trace ("\n" ++ (show $ current g)) $ asum $ map (outcome . applyM g) (novelPossibleMoves g)
+                          then case outcomes ls' (applyM g m) of
+                            Left ls'' -> evaluate (Set.insert next ls'') ms
+                            Right (g', ls'') -> Right (g', ls'')
+                          else evaluate ls' ms
+                            where
+                              next = applyT now m
 
 deal :: Deck -> IO Deck
 deal (Deck d) = do
