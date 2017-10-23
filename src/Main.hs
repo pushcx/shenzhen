@@ -44,7 +44,7 @@ instance Show Rank where
   show Nine  = "9"
 
 
-data Card = Flower | Suited Suit Rank | Dragon Suit
+data Card = Flower | Dragon Suit | Suited Suit Rank
   deriving (Eq, Ord)
 
 instance Show Card where
@@ -368,9 +368,12 @@ takeCardFromCol cols i = (card, newCols)
     newCol = drop 1 fromCol
     newCols = replaceIndex i newCol cols
 
+canonicalize :: Tableau -> Tableau
+canonicalize (Tableau cells fl fo cols) = Tableau (sort cells) fl fo (sort cols)
+
 -- applys a player's move and automatically builds if possible
 applyT :: Tableau -> Move -> Tableau
-applyT t m = automaticBuild (applied t m)
+applyT t m = canonicalize $ automaticBuild (applied t m)
   where
     applied (Tableau cells fl fo cols) (MoveFromColumnToCell coli celli) = Tableau newCells fl fo newCols
       where
@@ -509,7 +512,7 @@ outcomes ls g
   where
     seen = previous g -- [Tableau]
     now = last seen
-    moves = possibleMoves (trace (show (moveCount g) ++ " " ++ show now) now)
+    moves = possibleMoves (trace (show (moveCount g) ++ " " show (length ls) ++ " " ++ show now) now)
     foo :: Losses -> Tableau -> Bool
     foo ls' tab = tab `Set.notMember` ls' && tab `notElem` seen
     bar :: Losses -> [Move] -> Either Losses (Game, Losses)
