@@ -512,7 +512,7 @@ outcomes ls g
   where
     seen = previous g -- [Tableau]
     now = last seen
-    moves = possibleMoves (trace (show (moveCount g) ++ " " show (length ls) ++ " " ++ show now) now)
+    moves = possibleMoves (trace (show (moveCount g) ++ " " ++ show now) now)
     foo :: Losses -> Tableau -> Bool
     foo ls' tab = tab `Set.notMember` ls' && tab `notElem` seen
     bar :: Losses -> [Move] -> Either Losses (Game, Losses)
