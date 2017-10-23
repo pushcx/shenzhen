@@ -508,20 +508,20 @@ outcome = undefined
 outcomes :: Losses -> Game -> Either Losses (Game, Losses)
 outcomes ls g
   | won g = Right (g, ls)
-  | otherwise = bar ls moves
+  | otherwise = evaluate ls moves
   where
-    seen = previous g -- [Tableau]
+    seen = previous g
     now = last seen
     moves = possibleMoves (trace (show (moveCount g) ++ " " ++ show now) now)
-    foo :: Losses -> Tableau -> Bool
-    foo ls' tab = tab `Set.notMember` ls' && tab `notElem` seen
-    bar :: Losses -> [Move] -> Either Losses (Game, Losses)
-    bar ls' [] = Left ls'
-    bar ls' (m:ms) = if foo ls' next
+    notLost :: Losses -> Tableau -> Bool
+    notLost ls' tab = tab `Set.notMember` ls' && tab `notElem` seen
+    evaluate :: Losses -> [Move] -> Either Losses (Game, Losses)
+    evaluate ls' [] = Left ls'
+    evaluate ls' (m:ms) = if notLost ls' next
                     then case outcomes ls' (applyM g m) of
-                           Left ls'' -> bar (Set.insert next ls'') ms
+                           Left ls'' -> evaluate (Set.insert next ls'') ms
                            Right (g', ls'') -> Right (g', ls'')
-                    else bar ls' ms
+                    else evaluate ls' ms
                       where
                         next = applyT now m
 

@@ -38,19 +38,20 @@ Written for practice with Haskell and HaskellStack.
   - [x] Detect game loss
   - [x] Generate list of possible Moves for a position
   - [x] Filter possible Moves against Game history to avoid loops
-  - [ ] Bug: solver loops infinitely at losing states
-  - [ ] Take moves until game win/loss
+  - [x] Bug: solver loops infinitely at losing states
+  - [x] Take moves until game win/loss
   - [x] QuickCheck that the number + distribution of cards in the game is constant
   - [x] Bug: `mayTakeTo` takes to last instance of a `Dragon`, not first
   - [x] Bug: `Prelude.head: empty list`
   - [x] Bug: `Exception: shouldn't be trying to build Flower`
   - [x] Bug: automatic building isn't always building the `Flower`
   - [ ] `Move` smart constructors should error on `Flower`
-  - [ ] Bug: `Exception: Non-Suited card on Foundation`
-  - [ ] Bug: `Exception: element not in list, I warned you I was unsafe`
+  - [x] Bug: `Exception: Non-Suited card on Foundation`
+  - [x] Bug: `Exception: element not in list, I warned you I was unsafe`
   - [x] `showcols` does not print empty space or `__` for empty columns so columns shift left
-  - [ ] `[DragonCell]` should be a type that exposes only one empty cell at a time, cut down on solution space
-  - [ ] Some kind of memoization to avoid solver re-attempting from known-losing positions
+  - [x] ~~`[DragonCell]` should be a type that exposes only one empty cell at a time, cut down on solution space~~ obviated by `canonicalize`
+  - [x] Some kind of memoization to avoid solver re-attempting from known-losing positions
+  - [ ] Run a hundred times, report statistics
 
 ## Cleanups and open questions:
 
@@ -75,3 +76,4 @@ Written for practice with Haskell and HaskellStack.
   - [ ] Can I ensure `move` is only given `Move`s generated from the `Tableau` they're being applied to?
   - [ ] `nextRankForFoundation` should call `nextCardForFoundation`
   - [ ] `automaticBuild` could be functor application
+  - [ ] Would limiting to 100 moves cut off winning games? (Needs a second data structure; if I put timeouts in `Losses` it won't find shorter routes to `Tableau`s it happened to time out on.
