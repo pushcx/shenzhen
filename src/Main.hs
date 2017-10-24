@@ -1,14 +1,11 @@
 module Main where
 
-import Debug.Trace
-import GHC.Stack (HasCallStack)
+import Debug.Trace (trace)
 
-import Data.Foldable (asum)
-import Data.List ((\\), concatMap, elemIndex, elemIndices, foldl', intercalate, sort, transpose)
+import Data.List (concatMap, elemIndex, elemIndices, foldl', intercalate, sort, transpose)
 import Data.List.Split (chunksOf)
-import qualified Data.Map as Map
 import qualified Data.Set as Set
-import Data.Maybe (catMaybes, fromMaybe, listToMaybe, mapMaybe, maybeToList)
+import Data.Maybe (catMaybes, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
