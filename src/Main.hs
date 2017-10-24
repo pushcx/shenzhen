@@ -611,6 +611,12 @@ test = hspec $ do
     it "will build Flowers" $
       mkBuildFlower (tableau (Deck [Flower])) `shouldBe` Just (BuildFlower 0)
 
-  describe "automaticBuildMove" $
+  describe "automatic building" $ do
     it "can build Flowers" $
       automaticBuildMove (tableau (Deck [Flower])) `shouldBe` Just (BuildFlower 0)
+    it "can build Flowers behind 1s" $
+      automaticBuild (tableau (Deck [Suited Bamboo One, Flower])) `shouldBe` Tableau
+                                              [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
+                                              (Cell (Just Flower))
+                                              [Foundation Bamboo [Suited Bamboo One], mkFoundation Character, mkFoundation Dot]
+                                              [[]]
