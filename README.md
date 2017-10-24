@@ -51,7 +51,7 @@ Written for practice with Haskell and HaskellStack.
   - [x] `showcols` does not print empty space or `__` for empty columns so columns shift left
   - [x] ~~`[DragonCell]` should be a type that exposes only one empty cell at a time, cut down on solution space~~ obviated by `canonicalize`
   - [x] Some kind of memoization to avoid solver re-attempting from known-losing positions
-  - [ ] Run a hundred times, report statistics
+  - [x] Run a hundred times, report statistics
 
 ## Cleanups and open questions:
 

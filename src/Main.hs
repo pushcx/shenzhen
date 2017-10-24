@@ -478,8 +478,8 @@ previous (Game start moves) = scanl applyT start moves
 
 type Losses = Set.Set Tableau
 
-outcomes :: Losses -> Game -> Either Losses (Game, Losses)
-outcomes ls g
+solve :: Losses -> Game -> Either Losses (Game, Losses)
+solve ls g
   | won g = Right (g, ls)
   | otherwise = evaluate ls moves
   where
@@ -490,7 +490,7 @@ outcomes ls g
     evaluate :: Losses -> [Move] -> Either Losses (Game, Losses)
     evaluate ls' [] = Left ls'
     evaluate ls' (m:ms) = if notLost ls' next
-                          then case outcomes ls' (applyM g m) of
+                          then case solve ls' (applyM g m) of
                             Left ls'' -> evaluate (Set.insert next ls'') ms
                             Right (g', ls'') -> Right (g', ls'')
                           else evaluate ls' ms
@@ -502,15 +502,30 @@ deal (Deck d) = do
   cs <- shuffleM d
   return $ Deck cs
 
-main :: IO ()
-main = do
+play :: IO Game
+play = do
   d <- deal standardDeck
-  let st = tableau d
-  print st
-  let g = game st
-  case outcomes Set.empty g of
+  return $ game $ tableau d
+
+demo :: IO ()
+demo = do
+  g <- play
+  case solve Set.empty g of
     (Right (Game t ms, l)) -> putStrLn ( show t ++ show ms ++ "\nmoves: " ++ show (length ms) ++ " + losses: " ++ show (length l))
     (Left losses) -> putStrLn $ "lost " ++ show (length losses)
+
+stats :: Integer -> IO Double
+stats n = do
+  wins <- mapM (\_ -> do
+              g <- play
+              return $ case solve Set.empty g of
+                         Right _ -> 1 :: Double
+                         Left _ -> 0 :: Double
+              ) [1..n]
+  return $ sum wins * 100 / fromIntegral n
+
+main :: IO ()
+main = demo
 
 cards :: Deck -> [Card]
 cards (Deck cs) = cs
