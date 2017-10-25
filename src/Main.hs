@@ -519,7 +519,7 @@ stats n = do
                          Right _ -> 1 :: Double
                          Left _ -> 0 :: Double
               ) [1..n]
-  return $ sum wins * 100 / fromIntegral n
+  return $ sum wins / fromIntegral n * 100
 
 main :: IO ()
 main = demo
