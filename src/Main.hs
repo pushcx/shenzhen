@@ -351,8 +351,12 @@ buildCardToFoundations fs card = replaceIndex i (newF foundation) fs
 takeCardFromCell :: [DragonCell] -> Int -> (Card, [DragonCell])
 takeCardFromCell cells i = (card, newCells)
   where
-    Left (Cell cell) = cells !! i
-    (Just card) = cell
+    dc = cells !! i
+    card = case dc of
+             Left (Cell c) -> case c of
+                (Just card') -> card'
+                Nothing -> error "can't take card from empty cell"
+             Right _ -> error "can't take collected Dragons"
     newCells = replaceIndex i (Left (Cell Nothing)) cells
 
 takeCardFromCol :: [Column] -> Int -> (Card, [Column])
@@ -420,7 +424,11 @@ automaticallyBuildable _ CollectDragons{} = False
 automaticallyBuildable (Tableau _ _ fos cols) (BuildFromColumn coli) =
   buildable fos (head $ cols !! coli)
 automaticallyBuildable (Tableau cells _ fos _) (BuildFromCell celli) =
-  buildable fos $ (\(Left (Cell (Just card))) -> card) $ cells !! celli
+  buildable fos $ extractCard $ cells !! celli
+  where
+    extractCard (Left (Cell (Just card))) = card
+    extractCard (Left (Cell Nothing)) = error "tried to extractCard from Left (Cell Nothing)"
+    extractCard (Right _) = error "tried to extractCard from Right"
 
 buildable :: [Foundation] -> Card -> Bool
 buildable fos card@(Suited suit rank) =
@@ -429,6 +437,8 @@ buildable fos card@(Suited suit rank) =
     (Just nextCard) -> card == nextCard && rank <= highestRankAutomaticallyBuildable fos
   where
     fo = foundationBySuit suit fos
+buildable _ Flower = False
+buildable _ (Dragon _) = False
 
 automaticBuildMove :: Tableau -> Maybe Move
 automaticBuildMove tab =
@@ -459,8 +469,8 @@ data Game = Game Tableau [Move]
 -- instance Show Game where
 --   show (Game t ms) = (show length ms) ++ " " ++ show t ++ "\n" ++ ms
 
+moveCount :: Game -> Int
 moveCount (Game _ ms) = length ms
-
 
 game :: Tableau -> Game
 game t = Game t []
