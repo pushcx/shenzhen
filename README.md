@@ -59,7 +59,7 @@ Written for practice with Haskell and HaskellStack.
   - [x] Solver should filter to only pack to leftmost empty column
   - [ ] Never use `head` - maybe move to `classy-prelude`?
   - [ ] Organize code into modules, don't export constructors or the many unsafe utility functions for `Move`s
-  - [ ] there must be a nicer way to express `lastCardsOfRuns`
+  - [x] there must be a nicer way to express `lastCardsOfRuns`
   - [ ] Silence `-Wincomplete-patterns` and `-Wincomplete-uni-patterns` on util funcitons
   - [ ] Encode that `Tableau` has exactly one `Foundation` per `Suit`
   - [ ] Encode that `Tableau` has exactly one `DragonCell` per `Suit`

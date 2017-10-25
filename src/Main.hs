@@ -105,8 +105,7 @@ type Run = [Card]
 -- that can be taken independently
 lastCardsOfRuns :: Column -> [Card]
 lastCardsOfRuns [] = []
-lastCardsOfRuns [c] = [c]
-lastCardsOfRuns col = head col : map snd (takeWhile fst $ zipWith (\c d -> (validRunPair c d, d)) col (tail col))
+lastCardsOfRuns col@(c:_) = c : map snd (takeWhile (uncurry validRunPair) $ zip col (tail col))
 
 validRunPair :: Card -> Card -> Bool
 validRunPair (Suited fs fr) (Suited ts tr) =
@@ -593,9 +592,14 @@ test = hspec $ do
       property $ \col c -> let m = mayTakeTo (col :: [Card]) (c :: Card) in
                                m /= Just []
 
-  describe "lastCardsOfRuns" $
+  describe "lastCardsOfRuns" $ do
     it "finds no Runs in an empty list" $
       lastCardsOfRuns [] `shouldBe` []
+    it "is for a single card" $ do
+      lastCardsOfRuns [Suited Dot Two] `shouldBe` [Suited Dot Two]
+      lastCardsOfRuns [Dragon Dot] `shouldBe` [Dragon Dot]
+    it "finds possible runs" $
+      lastCardsOfRuns [Suited Dot Two, Suited Bamboo Three, Suited Character Four, Dragon Dot] `shouldBe` [Suited Dot Two, Suited Bamboo Three, Suited Character Four]
 
   describe "prop_standardCards" $
     it "has the same 40 cards as the starting deck" $
