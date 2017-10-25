@@ -215,7 +215,7 @@ mkMoveFromColumnToCell (Tableau cells _ _ cols) coli celli = do
   col <- maybeIndex cols coli
   card <- topmost col
   case card of
-    Flower -> error "mkMoveFromColumnToCell: Flower should have autobuilt"
+    Flower -> Nothing
     _ -> case maybeIndex cells celli of
            Nothing -> Nothing
            (Just (Right _)) -> Nothing
@@ -228,7 +228,7 @@ mkMoveFromCellToColumn (Tableau cells _ _ cols) celli coli = do
   card <- cell
   col <- maybeIndex cols coli
   case card of
-    Flower -> error "mkMoveFromCellToColumn: Flower should have autobuilt"
+    Flower -> Nothing
     _ -> case col of
            []    -> Just (MoveFromCellToColumn celli coli)
            (c:_) -> if validRunPair card c

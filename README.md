@@ -52,7 +52,7 @@ Written for practice with Haskell and HaskellStack.
   - [x] ~~`[DragonCell]` should be a type that exposes only one empty cell at a time, cut down on solution space~~ obviated by `canonicalize`
   - [x] Some kind of memoization to avoid solver re-attempting from known-losing positions
   - [x] Run a hundred times, report statistics
-  - [ ] Bug: trying to move Flower to cell, add tests
+  - [x] Bug: trying to move Flower to cell, add tests
 
 ## Cleanups and open questions:
 
