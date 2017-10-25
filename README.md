@@ -68,7 +68,7 @@ Written for practice with Haskell and HaskellStack.
   - [ ] `mayTakeTo` and `mkRunTo` want some kind of help
   - [x] The `Move` constructors must enforce validity to avoid passing around broken `Move` data, but then `move` has none. Does this make `move` clear or unsafe? What if this was more mature with `Move` in its own module not exporting the default constructor?
   - [x] This ties into `mayTakeTo` and `unsafeTakeTo`. `mkMove` must use the former but `move` really wants unsafe to avoid unwrapping `Maybe`. I can't even see how to unwrap it, really.
-  - [ ] And `novelPossibleMoves`, which is almost just `move now (possibleMoves now) \\ previous game where now = current game`
+  - [x] And `novelPossibleMoves`, which is almost just `move now (possibleMoves now) \\ previous game where now = current game`
   - [x] Require cells be used left-to-right to cut down state space of possible moves.
   - [ ] DragonCell could model explicitly that it's `Card | CollectedDragons | Nothing`
   - [x] Is `lost` correct? It might be only correct in the context of a depth-first search, where a `previous` `Tableau` would've already been searched for a win.
