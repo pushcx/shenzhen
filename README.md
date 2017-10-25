@@ -71,7 +71,7 @@ Written for practice with Haskell and HaskellStack.
   - [ ] And `novelPossibleMoves`, which is almost just `move now (possibleMoves now) \\ previous game where now = current game`
   - [x] Require cells be used left-to-right to cut down state space of possible moves.
   - [ ] DragonCell could model explicitly that it's `Card | CollectedDragons | Nothing`
-  - [ ] Is `lost` correct? It might be only correct in the context of a depth-first search, where a `previous` `Tableau` would've already been searched for a win.
+  - [x] Is `lost` correct? It might be only correct in the context of a depth-first search, where a `previous` `Tableau` would've already been searched for a win.
   - [ ] Can I enforce that a `Game` only includes `Move` that apply to prior `Tableau`?
   - [ ] Can I ensure `move` is only given `Move`s generated from the `Tableau` they're being applied to?
   - [ ] `nextRankForFoundation` should call `nextCardForFoundation`
