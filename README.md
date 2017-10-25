@@ -64,7 +64,7 @@ Written for practice with Haskell and HaskellStack.
   - [ ] Encode that `Tableau` has exactly one `Foundation` per `Suit`
   - [ ] Encode that `Tableau` has exactly one `DragonCell` per `Suit`
   - [ ] Encode that `FlowerCell` can only hold a `Flower`
-  - [ ] Look at `Bound` or `Enum` for `Rank`
+  - [x] Look at `Bound` or `Enum` for `Rank`
   - [ ] `mayTakeTo` and `mkRunTo` want some kind of help
   - [x] The `Move` constructors must enforce validity to avoid passing around broken `Move` data, but then `move` has none. Does this make `move` clear or unsafe? What if this was more mature with `Move` in its own module not exporting the default constructor?
   - [x] This ties into `mayTakeTo` and `unsafeTakeTo`. `mkMove` must use the former but `move` really wants unsafe to avoid unwrapping `Maybe`. I can't even see how to unwrap it, really.
