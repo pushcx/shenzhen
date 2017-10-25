@@ -9,9 +9,8 @@ import Data.Maybe (catMaybes, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
-import Test.Hspec
-import Test.QuickCheck
-import Test.QuickCheck.Modifiers (NonEmptyList (..))
+import Test.Hspec (hspec, describe, it, shouldBe)
+import Test.QuickCheck (Arbitrary, arbitrary, elements, property, shuffle)
 
 
 data Suit = Bamboo | Character | Dot
