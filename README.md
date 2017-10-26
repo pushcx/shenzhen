@@ -60,10 +60,10 @@ Written for practice with Haskell and HaskellStack.
   - [ ] Never use `head` - maybe move to `classy-prelude`?
   - [ ] Organize code into modules, don't export constructors or the many unsafe utility functions for `Move`s
   - [x] there must be a nicer way to express `lastCardsOfRuns`
-  - [ ] Silence `-Wincomplete-patterns` and `-Wincomplete-uni-patterns` on util funcitons
+  - [x] Silence `-Wincomplete-patterns` and `-Wincomplete-uni-patterns` on util funcitons
   - [ ] Encode that `Tableau` has exactly one `Foundation` per `Suit`
   - [ ] Encode that `Tableau` has exactly one `DragonCell` per `Suit`
-  - [ ] Encode that `FlowerCell` can only hold a `Flower`
+  - [x] Encode that `FlowerCell` can only hold a `Flower`
   - [x] Look at `Bound` or `Enum` for `Rank`
   - [ ] `mayTakeTo` and `mkRunTo` want some kind of help
   - [x] The `Move` constructors must enforce validity to avoid passing around broken `Move` data, but then `move` has none. Does this make `move` clear or unsafe? What if this was more mature with `Move` in its own module not exporting the default constructor?

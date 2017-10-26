@@ -64,12 +64,17 @@ rankOf Flower = error "Flower doesn't have a rank"
 
 newtype Cell = Cell (Maybe Card)
   deriving (Eq, Ord)
-type FlowerCell = Cell
 
 instance Show Cell where
   show (Cell Nothing)  = "__"
   show (Cell (Just c)) = show c
 
+data FlowerCell = EmptyFlowerCell | BuiltFlowerCell
+  deriving (Eq, Ord)
+
+instance Show FlowerCell where
+  show EmptyFlowerCell = "__"
+  show BuiltFlowerCell = "Fl"
 
 data Foundation = Foundation Suit [Card]
   deriving (Eq, Ord)
@@ -322,7 +327,7 @@ colsWithoutDragons cells suit = map (`colWithoutDragons` suit) cells
 tableau :: Deck -> Tableau
 tableau (Deck deck) = Tableau
                       [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
-                      (Cell Nothing)
+                      EmptyFlowerCell
                       (map mkFoundation suits)
                       (chunksOf 5 deck)
 
@@ -393,9 +398,9 @@ applyT t m = canonicalize $ automaticBuild (applied t m)
       where
         (card, newCells) = takeCardFromCell cells celli
         newFs = buildCardToFoundations fo card
-    applied (Tableau cells _ fos cols) (BuildFlower coli) = Tableau cells (Cell $ Just card) fos newCols
+    applied (Tableau cells _ fos cols) (BuildFlower coli) = Tableau cells BuiltFlowerCell fos newCols
       where
-        (card, newCols) = takeCardFromCol cols coli
+        (_, newCols) = takeCardFromCol cols coli
     applied (Tableau cells fl fo cols) (Pack fromi card toi) = Tableau cells fl fo newCols
       where
         fromCol = cols !! fromi
@@ -569,9 +574,8 @@ tabCards (Tableau cells fl fo cols) =
     cellCard (Right (CollectedDragon suit)) = replicate 4 (Dragon suit)
     cellCard (Left (Cell (Just card))) = [card]
     cellCard (Left (Cell Nothing)) = []
-    flowerCard (Cell (Just Flower)) = [Flower]
-    flowerCard (Cell (Just _)) = error "non-flower on flower cell"
-    flowerCard (Cell Nothing) = []
+    flowerCard BuiltFlowerCell = [Flower]
+    flowerCard EmptyFlowerCell = []
     foundationCards (Foundation _ cs) = cs
 
 prop_standardCards :: [Card] -> Bool
@@ -630,6 +634,6 @@ test = hspec $ do
     it "can build Flowers behind 1s" $
       automaticBuild (tableau (Deck [Suited Bamboo One, Flower])) `shouldBe` Tableau
                                               [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
-                                              (Cell (Just Flower))
+                                              BuiltFlowerCell
                                               [Foundation Bamboo [Suited Bamboo One], mkFoundation Character, mkFoundation Dot]
                                               [[]]
