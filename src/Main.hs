@@ -82,7 +82,7 @@ data Foundations = Foundations [Card] [Card] [Card]
 
 instance Show Foundations where
   show (Foundations bs cs ds) =
-    showF Bamboo bs ++ showF Character cs ++ showF Dot ds
+    showF Bamboo bs ++ " " ++ showF Character cs ++ " " ++ showF Dot ds
     where
       showF suit [] = "_" ++ show suit
       showF _ c = show $ head c
@@ -491,13 +491,19 @@ solve results@(Results (Losses ls, Timeouts ts)) g
     notLost (Losses ls') tab = tab `Set.notMember` ls' && tab `notElem` seen
     evaluate :: Results -> [Move] -> Either Results (Game, Results)
     evaluate results' [] = Left results'
-    evaluate results'@(Results (losses', timeouts')) (m:ms) = if notLost losses' next
-                              then case solve results' (applyM g m) of
-                                   Left (Results (Losses ls', Timeouts ts')) -> evaluate (Results (Losses (Set.insert next ls'), Timeouts ts)) ms
-                                   Right win -> Right win
-                              else evaluate results' ms
-                                where
-                                  next = applyT now m
+    evaluate results'@(Results (losses', Timeouts ts')) (m:ms) =
+      if notLost losses' next
+      then
+        if (moveCount g + 1) <= 120
+        then
+          case solve results' (applyM g m) of
+          Left (Results (Losses ls', timeouts')) -> evaluate (Results (Losses (Set.insert next ls'), timeouts')) ms
+          Right win -> Right win
+        else
+          Left (Results (Losses ls, Timeouts (Set.insert next ts')))
+      else evaluate results' ms
+        where
+          next = applyT now m
 
 deal :: Deck -> IO Deck
 deal (Deck d) = do
