@@ -474,24 +474,28 @@ previous (Game start moves) = scanl applyT start moves
 
 newtype Losses = Losses (Set.Set Tableau)
 newtype Timeouts = Timeouts (Set.Set Tableau)
+newtype Results = Results (Losses, Timeouts)
 
-solve :: Losses -> Game -> Either Losses (Game, Losses)
-solve losses@(Losses ls) g
-  | won g = Right (g, losses)
-  | otherwise = evaluate losses moves
+emptyResults :: Results
+emptyResults = Results (Losses Set.empty, Timeouts Set.empty)
+
+solve :: Results -> Game -> Either Results (Game, Results)
+solve results@(Results (Losses ls, Timeouts ts)) g
+  | won g = Right (g, results)
+  | otherwise = evaluate results moves
   where
     seen = previous g
     now = last seen
-    moves = possibleMoves (trace ("depth " ++ show (moveCount g) ++ " losses " ++ show (length ls) ++ "\n" ++ show now) now)
+    moves = possibleMoves (trace ("depth " ++ show (moveCount g) ++ " losses " ++ show (length ls) ++ " timeouts " ++ show (length ts) ++ "\n" ++ show now) now)
     notLost :: Losses -> Tableau -> Bool
     notLost (Losses ls') tab = tab `Set.notMember` ls' && tab `notElem` seen
-    evaluate :: Losses -> [Move] -> Either Losses (Game, Losses)
-    evaluate losses' [] = Left losses'
-    evaluate losses' (m:ms) = if notLost losses' next
-                              then case solve losses' (applyM g m) of
-                                   Left (Losses ls') -> evaluate (Losses (Set.insert next ls')) ms
+    evaluate :: Results -> [Move] -> Either Results (Game, Results)
+    evaluate results' [] = Left results'
+    evaluate results'@(Results (losses', timeouts')) (m:ms) = if notLost losses' next
+                              then case solve results' (applyM g m) of
+                                   Left (Results (Losses ls', Timeouts ts')) -> evaluate (Results (Losses (Set.insert next ls'), Timeouts ts)) ms
                                    Right win -> Right win
-                              else evaluate losses' ms
+                              else evaluate results' ms
                                 where
                                   next = applyT now m
 
@@ -508,15 +512,20 @@ play = do
 demo :: IO ()
 demo = do
   g <- play
-  case solve (Losses Set.empty) g of
-    (Right (Game t ms, Losses l)) -> putStrLn ( show t ++ show ms ++ "\nmoves: " ++ show (length ms) ++ " + losses: " ++ show (length l))
-    (Left (Losses l)) -> putStrLn $ "lost " ++ show (length l)
+  case solve emptyResults g of
+    (Right (Game tab ms, Results (Losses l, Timeouts t))) -> putStrLn $
+      show tab ++
+      show ms ++
+      "\nmoves: " ++ show (length ms) ++
+      " + losses: " ++ show (length l) ++
+        " timeouts: " ++ show (length t)
+    (Left (Results (Losses l, Timeouts t))) -> putStrLn $ "lost " ++ show (length l) ++ " timeouts: " ++ show (length t)
 
 stats :: Integer -> IO Double
 stats n = do
   wins <- mapM (\_ -> do
               g <- play
-              return $ case solve (Losses Set.empty) g of
+              return $ case solve emptyResults g of
                          Right _ -> 1 :: Double
                          Left _ -> 0 :: Double
               ) [1..n]
