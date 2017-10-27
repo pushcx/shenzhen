@@ -12,6 +12,8 @@ import System.Random.Shuffle (shuffleM)
 import Test.Hspec (hspec, describe, it, shouldBe)
 import Test.QuickCheck (Arbitrary, arbitrary, elements, property, shuffle)
 
+trace' :: String -> a -> a
+trace' = flip const
 
 data Suit = Bamboo | Character | Dot
   deriving (Eq, Ord)
@@ -486,7 +488,7 @@ solve results@(Results (Losses ls, Timeouts ts)) g
   where
     seen = previous g
     now = last seen
-    moves = possibleMoves (trace ("depth " ++ show (moveCount g) ++ " losses " ++ show (length ls) ++ " timeouts " ++ show (length ts) ++ "\n" ++ show now) now)
+    moves = possibleMoves (trace' ("depth " ++ show (moveCount g) ++ " losses " ++ show (length ls) ++ " timeouts " ++ show (length ts) ++ "\n" ++ show now) now)
     notLost :: Losses -> Tableau -> Bool
     notLost (Losses ls') tab = tab `Set.notMember` ls' && tab `notElem` seen
     evaluate :: Results -> [Move] -> Either Results (Game, Results)
@@ -519,26 +521,30 @@ demo :: IO ()
 demo = do
   g <- play
   case solve emptyResults g of
-    (Right (Game tab ms, Results (Losses l, Timeouts t))) -> putStrLn $
+    (Right (Game tab ms, r)) -> putStrLn $
       show tab ++
       show ms ++
-      "\nmoves: " ++ show (length ms) ++
-      " + losses: " ++ show (length l) ++
-        " timeouts: " ++ show (length t)
-    (Left (Results (Losses l, Timeouts t))) -> putStrLn $ "lost " ++ show (length l) ++ " timeouts: " ++ show (length t)
+      "\nmoves: " ++ show (length ms) ++  " " ++ show r
+    (Left r) -> print r
+
+instance Show Results where
+  show (Results (Losses ls, Timeouts ts)) = "lost " ++ show (length ls) ++ " timeouts: " ++ show (length ts)
 
 stats :: Integer -> IO Double
-stats n = do
-  wins <- mapM (\_ -> do
+stats total = do
+  wins <- mapM (\n -> do
               g <- play
-              return $ case solve emptyResults g of
-                         Right _ -> 1 :: Double
-                         Left _ -> 0 :: Double
-              ) [1..n]
-  return $ sum wins / fromIntegral n * 100
+              let r = solve emptyResults g in
+                return $ case trace (show n ++ "\n" ++ show r) r of
+                          Right _ -> 1 :: Double
+                          Left _ -> 0 :: Double
+                ) [1..total]
+  return $ sum wins / fromIntegral total * 100
 
 main :: IO ()
-main = demo
+main = do
+  percent <- stats 1000
+  print  percent
 
 cards :: Deck -> [Card]
 cards (Deck cs) = cs

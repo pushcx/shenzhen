@@ -78,3 +78,4 @@ Written for practice with Haskell and HaskellStack.
   - [ ] `automaticBuild` could be functor application
   - [ ] Would limiting to 100 moves cut off winning games? (Needs a second data structure; if I put timeouts in `Losses` it won't find shorter routes to `Tableau`s it happened to time out on.
   - [x] Use some clever extension to derive `Foundations`'s three stacks in data constructor from the three data constructors for `Suit`
+  - [ ] On loss, try from `Timeouts` (carrying in existing `Losses`)
