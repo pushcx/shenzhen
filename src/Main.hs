@@ -472,26 +472,28 @@ current (Game start moves) = foldl' applyT start moves
 previous :: Game -> [Tableau]
 previous (Game start moves) = scanl applyT start moves
 
-type Losses = Set.Set Tableau
+newtype Losses = Losses (Set.Set Tableau)
+newtype Timeouts = Timeouts (Set.Set Tableau)
 
 solve :: Losses -> Game -> Either Losses (Game, Losses)
-solve ls g
-  | won g = Right (g, ls)
-  | otherwise = evaluate ls moves
+solve losses@(Losses ls) g
+  | won g = Right (g, losses)
+  | otherwise = evaluate losses moves
   where
     seen = previous g
     now = last seen
     moves = possibleMoves (trace ("depth " ++ show (moveCount g) ++ " losses " ++ show (length ls) ++ "\n" ++ show now) now)
-    notLost ls' tab = tab `Set.notMember` ls' && tab `notElem` seen
+    notLost :: Losses -> Tableau -> Bool
+    notLost (Losses ls') tab = tab `Set.notMember` ls' && tab `notElem` seen
     evaluate :: Losses -> [Move] -> Either Losses (Game, Losses)
-    evaluate ls' [] = Left ls'
-    evaluate ls' (m:ms) = if notLost ls' next
-                          then case solve ls' (applyM g m) of
-                            Left ls'' -> evaluate (Set.insert next ls'') ms
-                            Right (g', ls'') -> Right (g', ls'')
-                          else evaluate ls' ms
-                            where
-                              next = applyT now m
+    evaluate losses' [] = Left losses'
+    evaluate losses' (m:ms) = if notLost losses' next
+                              then case solve losses' (applyM g m) of
+                                   Left (Losses ls') -> evaluate (Losses (Set.insert next ls')) ms
+                                   Right win -> Right win
+                              else evaluate losses' ms
+                                where
+                                  next = applyT now m
 
 deal :: Deck -> IO Deck
 deal (Deck d) = do
@@ -506,15 +508,15 @@ play = do
 demo :: IO ()
 demo = do
   g <- play
-  case solve Set.empty g of
-    (Right (Game t ms, l)) -> putStrLn ( show t ++ show ms ++ "\nmoves: " ++ show (length ms) ++ " + losses: " ++ show (length l))
-    (Left losses) -> putStrLn $ "lost " ++ show (length losses)
+  case solve (Losses Set.empty) g of
+    (Right (Game t ms, Losses l)) -> putStrLn ( show t ++ show ms ++ "\nmoves: " ++ show (length ms) ++ " + losses: " ++ show (length l))
+    (Left (Losses l)) -> putStrLn $ "lost " ++ show (length l)
 
 stats :: Integer -> IO Double
 stats n = do
   wins <- mapM (\_ -> do
               g <- play
-              return $ case solve Set.empty g of
+              return $ case solve (Losses Set.empty) g of
                          Right _ -> 1 :: Double
                          Left _ -> 0 :: Double
               ) [1..n]
