@@ -61,7 +61,7 @@ Written for practice with Haskell and HaskellStack.
   - [ ] Organize code into modules, don't export constructors or the many unsafe utility functions for `Move`s
   - [x] there must be a nicer way to express `lastCardsOfRuns`
   - [x] Silence `-Wincomplete-patterns` and `-Wincomplete-uni-patterns` on util funcitons
-  - [ ] Encode that `Tableau` has exactly one `Foundation` per `Suit`
+  - [x] Encode that `Tableau` has exactly one `Foundation` per `Suit`
   - [ ] Encode that `Tableau` has exactly one `DragonCell` per `Suit`
   - [x] Encode that `FlowerCell` can only hold a `Flower`
   - [x] Look at `Bound` or `Enum` for `Rank`
@@ -77,3 +77,4 @@ Written for practice with Haskell and HaskellStack.
   - [x] `nextRankForFoundation` should call `nextCardForFoundation`
   - [ ] `automaticBuild` could be functor application
   - [ ] Would limiting to 100 moves cut off winning games? (Needs a second data structure; if I put timeouts in `Losses` it won't find shorter routes to `Tableau`s it happened to time out on.
+  - [ ] Use some clever extension to derive `Foundations`'s three stacks in data constructor from the three data constructors for `Suit`

@@ -2,10 +2,10 @@ module Main where
 
 import Debug.Trace (trace)
 
-import Data.List (concatMap, elemIndex, elemIndices, foldl', intercalate, sort, transpose)
+import Data.List (concatMap, elemIndex, foldl', intercalate, sort, transpose)
 import Data.List.Split (chunksOf)
 import qualified Data.Set as Set
-import Data.Maybe (catMaybes, listToMaybe, mapMaybe, maybeToList)
+import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe, mapMaybe, maybeToList)
 import Safe (headMay)
 import System.Random.Shuffle (shuffleM)
 
@@ -76,23 +76,42 @@ instance Show FlowerCell where
   show EmptyFlowerCell = "__"
   show BuiltFlowerCell = "Fl"
 
-data Foundation = Foundation Suit [Card]
+-- Order is Bamboo, Character, Dot
+data Foundations = Foundations [Card] [Card] [Card]
   deriving (Eq, Ord)
 
-mkFoundation :: Suit -> Foundation
-mkFoundation s = Foundation s []
+instance Show Foundations where
+  show (Foundations bs cs ds) =
+    showF Bamboo bs ++ showF Character cs ++ showF Dot ds
+    where
+      showF suit [] = "_" ++ show suit
+      showF _ c = show $ head c
 
-buildOnFoundation :: Foundation -> Card -> Maybe Foundation
-buildOnFoundation f@(Foundation s cs) c = case nextCardForFoundation f of
-                                          Nothing -> Nothing
-                                          (Just n) -> if c == n
-                                                         then Just (Foundation s (c:cs))
-                                                         else Nothing
+mkFoundations :: Foundations
+mkFoundations = Foundations [] [] []
 
-instance Show Foundation where
-  show (Foundation suit []) = "_" ++ show suit
-  show (Foundation _    cs) = show $ head cs
+nextFRankIs :: [Card] -> Rank -> Bool
+nextFRankIs [] One = True
+nextFRankIs [] _ = False
+nextFRankIs (c:_) r = case nextRank (rankOf c) of
+                    (Just nr) -> nr == r
+                    Nothing -> False
 
+buildOnFoundations :: Foundations -> Card -> Maybe Foundations
+buildOnFoundations (Foundations bs cs ds) c@(Suited Bamboo rank)
+  | nextFRankIs bs rank = Just (Foundations (c:bs) cs ds)
+  | otherwise = Nothing
+buildOnFoundations (Foundations bs cs ds) c@(Suited Character rank)
+  | nextFRankIs cs rank = Just (Foundations bs (c:cs) ds)
+  | otherwise = Nothing
+buildOnFoundations (Foundations bs cs ds) c@(Suited Dot rank)
+  | nextFRankIs ds rank = Just (Foundations bs cs (c:ds))
+  | otherwise = Nothing
+buildOnFoundations _ Flower = Nothing
+buildOnFoundations _ (Dragon _) = Nothing
+
+buildable :: Foundations -> Card -> Bool
+buildable f c = isJust $ buildOnFoundations f c
 
 -- A vertical stack of cards. Stored topmost-first.
 -- "Topmost" is the card not covered by any other card even though the
@@ -158,13 +177,13 @@ type DragonCell = Either Cell CollectedDragon
 --   show (Left c) = show c
 --   show (Right (CollectedDragon s)) = "!" ++ show s
 
-data Tableau = Tableau [DragonCell] FlowerCell [Foundation] [Column]
+data Tableau = Tableau [DragonCell] FlowerCell Foundations [Column]
   deriving (Eq, Ord)
 instance Show Tableau where
   show (Tableau cells f fs cs) =
        "C: " ++ unwords (map show cells)
     ++ " Fl: "  ++ show f
-    ++ " -> "   ++ unwords (map show fs)
+    ++ " -> "   ++ show fs
     ++ "\n"     ++ sc
     ++ replicate (12 - length (lines sc)) '\n'
       where sc = showcols cs
@@ -184,17 +203,6 @@ nextRank Six   = Just Seven
 nextRank Seven = Just Eight
 nextRank Eight = Just Nine
 nextRank Nine  = Nothing
-
-nextRankForFoundation :: Foundation -> Maybe Rank
-nextRankForFoundation f = fmap rankOf (nextCardForFoundation f)
-
-nextCardForFoundation :: Foundation -> Maybe Card
-nextCardForFoundation (Foundation suit (Suited _ r:_)) = fmap (Suited suit) (nextRank r)
-nextCardForFoundation (Foundation suit []) = Just (Suited suit One)
-nextCardForFoundation (Foundation _ _) = error "Non-Suited card on Foundation"
-
-foundationBySuit :: Suit -> [Foundation] -> Foundation
-foundationBySuit suit foundations = head $ filter (\(Foundation s _) -> s == suit) foundations
 
 maybeIndex :: [a] -> Int -> Maybe a
 maybeIndex [] _ = Nothing
@@ -242,8 +250,7 @@ mkBuildFromColumn :: Tableau -> ColumnIndex -> Maybe Move
 mkBuildFromColumn (Tableau _ _ foundations cs) i = do
   col <- maybeIndex cs i
   card@(Suited _ _) <- topmost col
-  next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
-  if card == next
+  if buildable foundations card
   then return (BuildFromColumn i)
   else Nothing
 
@@ -251,8 +258,7 @@ mkBuildFromCell :: Tableau -> CellIndex -> Maybe Move
 mkBuildFromCell (Tableau cs _ foundations _) i = do
   Left (Cell cell) <- maybeIndex cs i
   card@(Suited _ _) <- cell
-  next <- nextCardForFoundation (foundationBySuit (suitOf card) foundations)
-  if card == next
+  if buildable foundations card
   then return (BuildFromCell i)
   else Nothing
 
@@ -328,7 +334,7 @@ tableau :: Deck -> Tableau
 tableau (Deck deck) = Tableau
                       [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
                       EmptyFlowerCell
-                      (map mkFoundation suits)
+                      mkFoundations
                       (chunksOf 5 deck)
 
 standardCards :: [Card]
@@ -342,16 +348,6 @@ standardDeck = Deck standardCards
 
 replaceIndex :: Int -> a -> [a] -> [a]
 replaceIndex i new list = take i list ++ new : drop (i + 1) list
-
-buildCardToFoundations :: [Foundation] -> Card -> [Foundation]
-buildCardToFoundations fs card = replaceIndex i (newF foundation) fs
-  where
-    suit = suitOf card
-    foundation = foundationBySuit suit fs
-    i = head $ elemIndices foundation fs
-    newF f = case buildOnFoundation foundation card of
-               (Just nf) -> nf
-               Nothing -> error $ "Can't build " ++ show card ++ " to " ++ show f
 
 takeCardFromCell :: [DragonCell] -> Int -> (Card, [DragonCell])
 takeCardFromCell cells i = (card, newCells)
@@ -393,11 +389,11 @@ applyT t m = canonicalize $ automaticBuild (applied t m)
     applied (Tableau cells fl fo cols) (BuildFromColumn coli) = Tableau cells fl newFs newCols
       where
         (card, newCols) = takeCardFromCol cols coli
-        newFs = buildCardToFoundations fo card
+        newFs = fromMaybe (error "a") (buildOnFoundations fo card)
     applied (Tableau cells fl fo cols) (BuildFromCell celli) = Tableau newCells fl newFs cols
       where
         (card, newCells) = takeCardFromCell cells celli
-        newFs = buildCardToFoundations fo card
+        newFs = fromMaybe (error "b") (buildOnFoundations fo card)
     applied (Tableau cells _ fos cols) (BuildFlower coli) = Tableau cells BuiltFlowerCell fos newCols
       where
         (_, newCols) = takeCardFromCol cols coli
@@ -417,8 +413,8 @@ applyT t m = canonicalize $ automaticBuild (applied t m)
 applyM :: Game -> Move -> Game
 applyM (Game st moves) m = Game st (moves ++ [m])
 
-highestRankAutomaticallyBuildable :: [Foundation] -> Rank
-highestRankAutomaticallyBuildable fos = minimum $ mapMaybe nextRankForFoundation fos
+highestRankAutomaticallyBuildable :: Foundations -> Rank
+highestRankAutomaticallyBuildable (Foundations cs bs ds) = minimum $ mapMaybe (nextRank . rankOf . head) [cs, bs, ds]
 
 automaticallyBuildable :: Tableau -> Move -> Bool
 automaticallyBuildable _ MoveFromColumnToCell{} = False
@@ -434,16 +430,6 @@ automaticallyBuildable (Tableau cells _ fos _) (BuildFromCell celli) =
     extractCard (Left (Cell (Just card))) = card
     extractCard (Left (Cell Nothing)) = error "tried to extractCard from Left (Cell Nothing)"
     extractCard (Right _) = error "tried to extractCard from Right"
-
-buildable :: [Foundation] -> Card -> Bool
-buildable fos card@(Suited suit rank) =
-  case nextCardForFoundation fo of
-    Nothing -> False
-    (Just nextCard) -> card == nextCard && rank <= highestRankAutomaticallyBuildable fos
-  where
-    fo = foundationBySuit suit fos
-buildable _ Flower = False
-buildable _ (Dragon _) = False
 
 automaticBuildMove :: Tableau -> Maybe Move
 automaticBuildMove tab =
@@ -569,14 +555,14 @@ instance Arbitrary TableauMove where
 
 tabCards :: Tableau -> [Card]
 tabCards (Tableau cells fl fo cols) =
-  concatMap cellCard cells ++ flowerCard fl ++ concatMap foundationCards fo ++ concat cols
+  concatMap cellCard cells ++ flowerCard fl ++ foundationsCards fo ++ concat cols
   where
     cellCard (Right (CollectedDragon suit)) = replicate 4 (Dragon suit)
     cellCard (Left (Cell (Just card))) = [card]
     cellCard (Left (Cell Nothing)) = []
     flowerCard BuiltFlowerCell = [Flower]
     flowerCard EmptyFlowerCell = []
-    foundationCards (Foundation _ cs) = cs
+    foundationsCards (Foundations bs cs ds) = bs ++ cs ++ ds
 
 prop_standardCards :: [Card] -> Bool
 prop_standardCards cs = sort cs == standardCards
@@ -635,5 +621,5 @@ test = hspec $ do
       automaticBuild (tableau (Deck [Suited Bamboo One, Flower])) `shouldBe` Tableau
                                               [Left (Cell Nothing), Left (Cell Nothing), Left (Cell Nothing)]
                                               BuiltFlowerCell
-                                              [Foundation Bamboo [Suited Bamboo One], mkFoundation Character, mkFoundation Dot]
+                                              (Foundations [Suited Bamboo One] [] [])
                                               [[]]
